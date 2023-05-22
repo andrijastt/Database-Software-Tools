@@ -5,6 +5,7 @@
 package rs.etf.sab.student;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +70,25 @@ public class sa190222_CityOperations implements CityOperations {
 
     @Override
     public List<Integer> getCities() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        
+        ArrayList<Integer> ret = new ArrayList<>();
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select IdCity from City";
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.execute(query);
+            
+            ResultSet rs = stmt.getResultSet();
+            while(rs.next()){
+                ret.add(rs.getInt(1));
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return ret;        
     }
 
     @Override
@@ -161,6 +180,11 @@ public class sa190222_CityOperations implements CityOperations {
         int ret = new sa190222_CityOperations().createCity("Novi Sad");
         ret = new sa190222_CityOperations().connectCities(1, 3, 1);
         System.out.println(ret);
+        
+        List<Integer> ret0 = new sa190222_CityOperations().getCities();
+        
+        System.out.println(ret);
+        
     }
     
 }
