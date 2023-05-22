@@ -167,7 +167,28 @@ public class sa190222_CityOperations implements CityOperations {
 
     @Override
     public List<Integer> getConnectedCities(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        ArrayList<Integer> ret = new ArrayList<>();
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select IdLine from Line where IdCity1 = ? or IdCity2 = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setInt(1, i);
+            ps.setInt(2, i);
+            
+            try(ResultSet rs = ps.executeQuery()){
+                while(rs.next()){
+                    ret.add(rs.getInt(1));
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return ret;
     }
 
     @Override
@@ -183,6 +204,10 @@ public class sa190222_CityOperations implements CityOperations {
         
         List<Integer> ret0 = new sa190222_CityOperations().getCities();
         
+        System.out.println(ret);
+        ret0 = new sa190222_CityOperations().getConnectedCities(1);
+        System.out.println(ret);
+        ret0 = new sa190222_CityOperations().getConnectedCities(2);
         System.out.println(ret);
         
     }
