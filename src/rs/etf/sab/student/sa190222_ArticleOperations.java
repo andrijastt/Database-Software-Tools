@@ -75,7 +75,7 @@ public class sa190222_ArticleOperations implements ArticleOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_ArticleOperations().createArticle(1, "aaa", 100);
+        int ret = new sa190222_ArticleOperations().createArticle(1, "Mleko", 150);
         System.out.println("rs.etf.sab.student.sa190222_ArticleOperations.main() " + ret);
         
     }
