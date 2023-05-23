@@ -66,8 +66,41 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     }
 
     @Override
-    public int setCity(int i, int i1) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int setCity(int idBuyer, int idCity) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String selectCityQuery = "Select * from City where IdCity = ?";
+        try(PreparedStatement psCitySelect = conn.prepareStatement(selectCityQuery);) {
+            
+            psCitySelect.setInt(1, idCity);
+            try(ResultSet rsCity = psCitySelect.executeQuery();){
+                
+                if(!rsCity.next()){     // city doesn't exist
+                    return -1;
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        String updateQuery = "Update Buyer set IdCity = ? where IdBuyer = ?";
+        try(PreparedStatement psUpdate = conn.prepareStatement(updateQuery);) {
+            
+            psUpdate.setInt(1, idCity);
+            psUpdate.setInt(2, idBuyer);
+            
+            if(psUpdate.executeUpdate() == 1) return 1;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;        
     }
 
     @Override
@@ -97,7 +130,7 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_BuyerOperations().createBuyer("Milos Cvetanovic", 2);
+        int ret = new sa190222_BuyerOperations().setCity(1, 2);
         System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
     }
     
