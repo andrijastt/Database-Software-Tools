@@ -254,14 +254,34 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
 
     @Override
-    public int getDiscount(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getDiscount(int shopId) {
+        Connection conn = DB.getInstance().getConnection();
+        String query = "Select Discount from Shop where IdShop = ?";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, shopId);
+            try(ResultSet rs = ps.executeQuery()){
+                
+                if(rs.next()){
+                    return rs.getInt(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().getArticleCount(2);
+        int ret = new sa190222_ShopOperations().setDiscount(1, 10);
         System.out.println(ret);
-        ret = new sa190222_ShopOperations().getArticleCount(3);
+        ret = new sa190222_ShopOperations().getDiscount(1);
         System.out.println(ret);
     }
 }
