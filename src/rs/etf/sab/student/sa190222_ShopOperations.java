@@ -188,8 +188,38 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
 
     @Override
-    public int increaseArticleCount(int i, int i1) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int increaseArticleCount(int articleId, int increment) {
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Update Article SET Count = Count + ? where IdArticle = ?";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, increment);
+            ps.setInt(2, articleId);                                             
+            
+            if(ps.executeUpdate() == 1){    // success
+                
+                String querySelect = "Select Count from Article where IdArticle = ?";
+                try(PreparedStatement psSelect = conn.prepareStatement(querySelect);){                    
+                    psSelect.setInt(1, articleId);                    
+                    try(ResultSet rsSelect = psSelect.executeQuery()){                        
+                        if(rsSelect.next()){
+                            return rsSelect.getInt(1);
+                        }                        
+                    }                                        
+                } catch (SQLException ex) {
+                    Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
+        
     }
 
     @Override
@@ -208,7 +238,7 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().setDiscount(2, 0);
+        int ret = new sa190222_ShopOperations().increaseArticleCount(2, 10);
         System.out.println(ret);
     }
 }
