@@ -6,6 +6,7 @@ package rs.etf.sab.student;
 
 import java.sql.*;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -249,8 +250,31 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
 
     @Override
-    public List<Integer> getArticles(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public List<Integer> getArticles(int idShop) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        String query = "Select IdArticle from Article where IdShop = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idShop);
+            try(ResultSet rs = ps.executeQuery();){
+                
+                while(rs.next()){
+                    ret.add(rs.getInt(1));
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+        
     }
 
     @Override
@@ -280,6 +304,7 @@ public class sa190222_ShopOperations implements ShopOperations {
     
     public static void main(String[] args) {
         int ret = new sa190222_ShopOperations().setDiscount(1, 10);
+        List<Integer> ret0 = new sa190222_ShopOperations().getArticles(2);
         System.out.println(ret);
         ret = new sa190222_ShopOperations().getDiscount(1);
         System.out.println(ret);
