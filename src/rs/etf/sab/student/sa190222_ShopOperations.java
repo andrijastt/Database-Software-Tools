@@ -138,8 +138,33 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
 
     @Override
-    public int getCity(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getCity(int shopId) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        int ret = -1;
+        
+        String query = "Select IdCity from Shop where IdShop = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, shopId);
+            
+            try(ResultSet rs = ps.executeQuery();){
+                
+                if(rs.next()){
+                    ret = rs.getInt(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return ret;
+        
     }
 
     @Override
@@ -168,7 +193,7 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().setCity(1, "Aleksinac");
+        int ret = new sa190222_ShopOperations().getCity(2);
         System.out.println(ret);
     }
 }
