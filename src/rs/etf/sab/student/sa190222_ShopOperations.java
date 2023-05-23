@@ -76,14 +76,65 @@ public class sa190222_ShopOperations implements ShopOperations {
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        }                
                 
         return ret;
     }
 
     @Override
-    public int setCity(int i, String string) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int setCity(int idShop, String cityName) {
+        Connection conn = DB.getInstance().getConnection();
+        int ret = -1;
+        int cityId = -1;        
+        String selectCityNameQuery = "Select * from City where Name = ?";
+        try(PreparedStatement psCityName = conn.prepareStatement(selectCityNameQuery, Statement.RETURN_GENERATED_KEYS);) {
+            psCityName.setString(1, cityName);
+            
+            try(ResultSet rsCityName = psCityName.executeQuery();){
+                
+                if(!rsCityName.next()){     // No city Found
+                    return ret;
+                } else {
+                    cityId = rsCityName.getInt(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        String ShopNameQuery = "Select * from Shop where IdShop = ?";
+        try(PreparedStatement psShopName = conn.prepareStatement(ShopNameQuery);) {
+            psShopName.setInt(1, idShop);
+            
+            try(ResultSet rsShopName = psShopName.executeQuery();){
+                
+                if(!rsShopName.next()){     // Shop with Id not found
+                    return ret;
+                } 
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        String updateQuery = "Update Shop set IdCity = ? where IdShop = ?";
+        try(PreparedStatement psUpdate = conn.prepareStatement(updateQuery);) {
+            psUpdate.setInt(1, cityId);
+            psUpdate.setInt(2, idShop);
+            
+            if(psUpdate.executeUpdate() == 1) ret = 1;
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                
+        return ret;        
     }
 
     @Override
@@ -117,7 +168,7 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().createShop("Rival", "Aleksinac");
+        int ret = new sa190222_ShopOperations().setCity(1, "Aleksinac");
         System.out.println(ret);
     }
 }
