@@ -177,13 +177,31 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     }
 
     @Override
-    public BigDecimal getCredit(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getCredit(int buyerId) {
+       Connection conn = DB.getInstance().getConnection();
+       
+       String selectQuery = "SELECT Wallet from Buyer where IdBuyer = ?";                
+        try(PreparedStatement psSelect = conn.prepareStatement(selectQuery);){         
+
+            psSelect.setInt(1, buyerId);                                        
+            try(ResultSet rs = psSelect.executeQuery();){                                                
+                if(rs.next()){
+                    return rs.getBigDecimal(1);
+                }                                                        
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+        return new BigDecimal(-1);
     }
     
     public static void main(String[] args) {
         
-        BigDecimal ret = new sa190222_BuyerOperations().increaseCredit(2, new BigDecimal(5000));
+        BigDecimal ret = new sa190222_BuyerOperations().getCredit(0);
         System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
     }
     
