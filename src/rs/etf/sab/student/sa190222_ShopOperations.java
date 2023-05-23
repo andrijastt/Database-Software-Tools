@@ -223,8 +223,29 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
 
     @Override
-    public int getArticleCount(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getArticleCount(int id) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        String query = "Select Count from Article where IdArticle = ?";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, id);
+            try(ResultSet rs = ps.executeQuery()){
+                
+                if(rs.next()){
+                    return rs.getInt(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_ShopOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
     }
 
     @Override
@@ -238,7 +259,9 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().increaseArticleCount(2, 10);
+        int ret = new sa190222_ShopOperations().getArticleCount(2);
+        System.out.println(ret);
+        ret = new sa190222_ShopOperations().getArticleCount(3);
         System.out.println(ret);
     }
 }
