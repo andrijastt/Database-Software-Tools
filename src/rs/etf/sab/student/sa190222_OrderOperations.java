@@ -5,8 +5,11 @@
 package rs.etf.sab.student;
 
 import java.math.BigDecimal;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rs.etf.sab.operations.OrderOperations;
 
 /**
@@ -46,8 +49,29 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public String getState(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public String getState(int orderId) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select Status from [Order] where IdOrder = ?";        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, orderId);
+            try(ResultSet rs = ps.executeQuery();){
+                
+                if(rs.next()){
+                    return rs.getString(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return "";
     }
 
     @Override
@@ -68,6 +92,12 @@ public class sa190222_OrderOperations implements OrderOperations {
     @Override
     public int getLocation(int i) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+    
+    public static void main(String[] args) {
+        
+        String ret = new sa190222_OrderOperations().getState(1);
+        System.out.println(ret);
     }
     
 }
