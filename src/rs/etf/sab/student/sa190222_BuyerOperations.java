@@ -104,8 +104,30 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     }
 
     @Override
-    public int getCity(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getCity(int idBuyer) {
+        
+        Connection conn = DB.getInstance().getConnection();
+
+        String query = "Select IdCity from Buyer where IdBuyer = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);) {
+            
+            ps.setInt(1, idBuyer);                        
+            try(ResultSet rs =ps.executeQuery();){
+         
+                if(rs.next()){
+                    return rs.getInt(1);
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
+        
     }
 
     @Override
@@ -130,7 +152,7 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_BuyerOperations().setCity(1, 2);
+        int ret = new sa190222_BuyerOperations().getCity(2);
         System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
     }
     
