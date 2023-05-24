@@ -165,13 +165,52 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public Calendar getSentTime(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Calendar getSentTime(int idOrder) {
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select SentTime from [Order] where IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {            
+            ps.setInt(1, idOrder);
+            try(ResultSet rs = ps.executeQuery();){
+                
+                if(rs.next()){                                        
+                    java.util.Date date = rs.getDate(1);                    
+                    Calendar ret = Calendar.getInstance();
+                    ret.setTime(date);
+                    return ret;
+                }
+                
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        
+        return null;
     }
 
     @Override
-    public Calendar getRecievedTime(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Calendar getRecievedTime(int idOrder) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select ReceivedTime from [Order] where IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {            
+            ps.setInt(1, idOrder);
+            try(ResultSet rs = ps.executeQuery();){
+                
+                if(rs.next()){                                        
+                    java.util.Date date = rs.getDate(1);                    
+                    Calendar ret = Calendar.getInstance();
+                    ret.setTime(date);
+                    return ret;
+                }
+                
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        
+        return null;
     }
 
     @Override
@@ -194,6 +233,9 @@ public class sa190222_OrderOperations implements OrderOperations {
 
         List<Integer> listRet = new sa190222_OrderOperations().getItems(1);
         System.out.println(retInt);
+        
+        Calendar cal = new sa190222_OrderOperations().getSentTime(1);
+        System.out.println(cal);
     }
     
 }
