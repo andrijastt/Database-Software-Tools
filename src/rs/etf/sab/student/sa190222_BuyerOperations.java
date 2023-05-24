@@ -6,6 +6,7 @@ package rs.etf.sab.student;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -206,8 +207,30 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     }
 
     @Override
-    public List<Integer> getOrders(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public List<Integer> getOrders(int buyerId) {
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select IdOrder from [Order] where IdBuyer = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, buyerId);
+            try(ResultSet rs = ps.executeQuery();){
+                
+                while(rs.next()){
+                    ret.add(rs.getInt(1));
+                }
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return ret;
     }
 
     @Override
@@ -235,11 +258,15 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_BuyerOperations().createOrder(2);
+//        int ret = new sa190222_BuyerOperations().createBuyer("Milos", 1);
+//        ret = new sa190222_BuyerOperations().createOrder(3);
 //        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
+                    
+            List<Integer> list = new sa190222_BuyerOperations().getOrders(1);
+            
+            System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main()" + list);
         
-        
-        System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
+//        System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
     }
     
 }
