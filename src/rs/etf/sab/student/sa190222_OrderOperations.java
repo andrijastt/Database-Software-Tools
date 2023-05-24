@@ -108,8 +108,7 @@ public class sa190222_OrderOperations implements OrderOperations {
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idOrder);            
-            try(ResultSet rs = ps.executeQuery();){
-                
+            try(ResultSet rs = ps.executeQuery();){                
                 while(rs.next()){
                     ret.add(rs.getInt(1));
                 }                
@@ -174,6 +173,7 @@ public class sa190222_OrderOperations implements OrderOperations {
             try(ResultSet rs = ps.executeQuery();){
                 
                 if(rs.next()){                                        
+                    if(rs.getDate(1) == null) return null;
                     java.util.Date date = rs.getDate(1);                    
                     Calendar ret = Calendar.getInstance();
                     ret.setTime(date);
@@ -199,6 +199,7 @@ public class sa190222_OrderOperations implements OrderOperations {
             try(ResultSet rs = ps.executeQuery();){
                 
                 if(rs.next()){                                        
+                    if(rs.getDate(1) == null) return null;
                     java.util.Date date = rs.getDate(1);                    
                     Calendar ret = Calendar.getInstance();
                     ret.setTime(date);
@@ -268,7 +269,7 @@ public class sa190222_OrderOperations implements OrderOperations {
         System.out.println(retInt);
         
         Calendar cal = new sa190222_OrderOperations().getSentTime(1);
-//        System.out.println(cal);
+        System.out.println(cal);
     }
     
 }
