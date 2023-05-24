@@ -6,6 +6,7 @@ package rs.etf.sab.student;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
@@ -97,8 +98,29 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public List<Integer> getItems(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public List<Integer> getItems(int idOrder) {
+        
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select IdItem from Item where IdOrder = ?";        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idOrder);            
+            try(ResultSet rs = ps.executeQuery();){
+                
+                while(rs.next()){
+                    ret.add(rs.getInt(1));
+                }                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return ret;
+        
     }
 
     @Override
@@ -168,7 +190,9 @@ public class sa190222_OrderOperations implements OrderOperations {
         System.out.println(ret);
         
         int retInt = new sa190222_OrderOperations().addArticle(1, 2, 15);  
-        retInt = new sa190222_OrderOperations().removeArticle(1, 2); 
+//        retInt = new sa190222_OrderOperations().removeArticle(1, 2); 
+
+        List<Integer> listRet = new sa190222_OrderOperations().getItems(1);
         System.out.println(retInt);
     }
     
