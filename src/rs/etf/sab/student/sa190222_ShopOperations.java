@@ -303,7 +303,8 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().increaseArticleCount(1, 20);
+        int ret = new sa190222_ShopOperations().createShop("Rival", "Aleksinac");
+        ret = new sa190222_ShopOperations().increaseArticleCount(1, 20);
         ret = new sa190222_ShopOperations().increaseArticleCount(2, 40);
         System.out.println(ret);
     }

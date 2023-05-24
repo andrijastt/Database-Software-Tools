@@ -30,6 +30,15 @@ CREATE TABLE [City]
 )
 go
 
+CREATE TABLE [Item]
+( 
+	[IdArticle]          integer  NOT NULL ,
+	[Count]              integer  NOT NULL ,
+	[IdOrder]            integer  NULL ,
+	[IdItem]             integer  IDENTITY  NOT NULL 
+)
+go
+
 CREATE TABLE [Line]
 ( 
 	[IdCity2]            integer  NOT NULL ,
@@ -49,14 +58,6 @@ CREATE TABLE [Order]
 	[CurrentCity]        integer  NULL ,
 	[SentTime]           datetime  NULL ,
 	[ReceivedTime]       datetime  NULL 
-)
-go
-
-CREATE TABLE [Package]
-( 
-	[IdArticle]          integer  NOT NULL ,
-	[Count]              integer  NOT NULL ,
-	[IdOrder]            integer  NOT NULL 
 )
 go
 
@@ -105,16 +106,16 @@ ALTER TABLE [City]
 	ADD CONSTRAINT [XPKCity] PRIMARY KEY  CLUSTERED ([IdCity] ASC)
 go
 
+ALTER TABLE [Item]
+	ADD CONSTRAINT [XPKItem] PRIMARY KEY  CLUSTERED ([IdItem] ASC)
+go
+
 ALTER TABLE [Line]
 	ADD CONSTRAINT [XPKLine] PRIMARY KEY  CLUSTERED ([IdLine] ASC)
 go
 
 ALTER TABLE [Order]
 	ADD CONSTRAINT [XPKOrder] PRIMARY KEY  CLUSTERED ([IdOrder] ASC)
-go
-
-ALTER TABLE [Package]
-	ADD CONSTRAINT [XPKPackage] PRIMARY KEY  CLUSTERED ([IdOrder] ASC,[IdArticle] ASC)
 go
 
 ALTER TABLE [Shop]
@@ -140,6 +141,19 @@ ALTER TABLE [Buyer]
 go
 
 
+ALTER TABLE [Item]
+	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdArticle]) REFERENCES [Article]([IdArticle])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Item]
+	ADD CONSTRAINT [R_15] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
 ALTER TABLE [Line]
 	ADD CONSTRAINT [R_9] FOREIGN KEY ([IdCity2]) REFERENCES [City]([IdCity])
 		ON DELETE NO ACTION
@@ -155,19 +169,6 @@ go
 
 ALTER TABLE [Order]
 	ADD CONSTRAINT [R_3] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
-
-
-ALTER TABLE [Package]
-	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdArticle]) REFERENCES [Article]([IdArticle])
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
-
-ALTER TABLE [Package]
-	ADD CONSTRAINT [R_15] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
 		ON DELETE NO ACTION
 		ON UPDATE NO ACTION
 go
@@ -208,20 +209,20 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Article  Package on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="0001ff64", PARENT_OWNER="", PARENT_TABLE="Article"
-    CHILD_OWNER="", CHILD_TABLE="Package"
+    /* Article  Item on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="000207cc", PARENT_OWNER="", PARENT_TABLE="Article"
+    CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
     IF EXISTS (
-      SELECT * FROM deleted,Package
+      SELECT * FROM deleted,Item
       WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdArticle = deleted.IdArticle
+        /*  %JoinFKPK(Item,deleted," = "," AND") */
+        Item.IdArticle = deleted.IdArticle
     )
     BEGIN
       SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Article because Package exists.'
+             @errmsg = 'Cannot delete Article because Item exists.'
       GOTO error
     END
 
@@ -276,9 +277,9 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Article  Package on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="0002707a", PARENT_OWNER="", PARENT_TABLE="Article"
-    CHILD_OWNER="", CHILD_TABLE="Package"
+  /* Article  Item on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="00026ade", PARENT_OWNER="", PARENT_TABLE="Article"
+    CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
   IF
@@ -286,14 +287,14 @@ BEGIN
     UPDATE(IdArticle)
   BEGIN
     IF EXISTS (
-      SELECT * FROM deleted,Package
+      SELECT * FROM deleted,Item
       WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdArticle = deleted.IdArticle
+        /*  %JoinFKPK(Item,deleted," = "," AND") */
+        Item.IdArticle = deleted.IdArticle
     )
     BEGIN
       SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Article because Package exists.'
+             @errmsg = 'Cannot update Article because Item exists.'
       GOTO error
     END
   END
@@ -736,6 +737,155 @@ go
 
 
 
+CREATE TRIGGER tD_Item ON Item FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on Item */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* Order  Item on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00024cc0", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Item"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
+    IF EXISTS (SELECT * FROM deleted,Order
+      WHERE
+        /* %JoinFKPK(deleted,Order," = "," AND") */
+        deleted.IdOrder = Order.IdOrder AND
+        NOT EXISTS (
+          SELECT * FROM Item
+          WHERE
+            /* %JoinFKPK(Item,Order," = "," AND") */
+            Item.IdOrder = Order.IdOrder
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Item because Order exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
+    /* Article  Item on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Article"
+    CHILD_OWNER="", CHILD_TABLE="Item"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
+    IF EXISTS (SELECT * FROM deleted,Article
+      WHERE
+        /* %JoinFKPK(deleted,Article," = "," AND") */
+        deleted.IdArticle = Article.IdArticle AND
+        NOT EXISTS (
+          SELECT * FROM Item
+          WHERE
+            /* %JoinFKPK(Item,Article," = "," AND") */
+            Item.IdArticle = Article.IdArticle
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Item because Article exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+CREATE TRIGGER tU_Item ON Item FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on Item */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insIdItem integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* Order  Item on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="0002cc69", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Item"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdOrder)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Order
+        WHERE
+          /* %JoinFKPK(inserted,Order) */
+          inserted.IdOrder = Order.IdOrder
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    select @nullcnt = count(*) from inserted where
+      inserted.IdOrder IS NULL
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Item because Order does not exist.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
+  /* Article  Item on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Article"
+    CHILD_OWNER="", CHILD_TABLE="Item"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdArticle)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Article
+        WHERE
+          /* %JoinFKPK(inserted,Article) */
+          inserted.IdArticle = Article.IdArticle
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Item because Article does not exist.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
 CREATE TRIGGER tD_Line ON Line FOR DELETE AS
 /* erwin Builtin Trigger */
 /* DELETE trigger on Line */
@@ -893,20 +1043,20 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Order  Package on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="000306dd", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Package"
+    /* Order  Item on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="0002ffff", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
     IF EXISTS (
-      SELECT * FROM deleted,Package
+      SELECT * FROM deleted,Item
       WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdOrder = deleted.IdOrder
+        /*  %JoinFKPK(Item,deleted," = "," AND") */
+        Item.IdOrder = deleted.IdOrder
     )
     BEGIN
       SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Order because Package exists.'
+             @errmsg = 'Cannot delete Order because Item exists.'
       GOTO error
     END
 
@@ -979,9 +1129,9 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Order  Package on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003781e", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Package"
+  /* Order  Item on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="00036f82", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
   IF
@@ -989,14 +1139,14 @@ BEGIN
     UPDATE(IdOrder)
   BEGIN
     IF EXISTS (
-      SELECT * FROM deleted,Package
+      SELECT * FROM deleted,Item
       WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdOrder = deleted.IdOrder
+        /*  %JoinFKPK(Item,deleted," = "," AND") */
+        Item.IdOrder = deleted.IdOrder
     )
     BEGIN
       SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Order because Package exists.'
+             @errmsg = 'Cannot update Order because Item exists.'
       GOTO error
     END
   END
@@ -1047,155 +1197,6 @@ BEGIN
     BEGIN
       SELECT @errno  = 30007,
              @errmsg = 'Cannot update Order because Buyer does not exist.'
-      GOTO error
-    END
-  END
-
-
-  /* erwin Builtin Trigger */
-  RETURN
-error:
-   RAISERROR (@errmsg, -- Message text.
-              @severity, -- Severity (0~25).
-              @state) -- State (0~255).
-    rollback transaction
-END
-
-go
-
-
-
-
-CREATE TRIGGER tD_Package ON Package FOR DELETE AS
-/* erwin Builtin Trigger */
-/* DELETE trigger on Package */
-BEGIN
-  DECLARE  @errno   int,
-           @severity int,
-           @state    int,
-           @errmsg  varchar(255)
-    /* erwin Builtin Trigger */
-    /* Order  Package on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00026093", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
-    IF EXISTS (SELECT * FROM deleted,Order
-      WHERE
-        /* %JoinFKPK(deleted,Order," = "," AND") */
-        deleted.IdOrder = Order.IdOrder AND
-        NOT EXISTS (
-          SELECT * FROM Package
-          WHERE
-            /* %JoinFKPK(Package,Order," = "," AND") */
-            Package.IdOrder = Order.IdOrder
-        )
-    )
-    BEGIN
-      SELECT @errno  = 30010,
-             @errmsg = 'Cannot delete last Package because Order exists.'
-      GOTO error
-    END
-
-    /* erwin Builtin Trigger */
-    /* Article  Package on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Article"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
-    IF EXISTS (SELECT * FROM deleted,Article
-      WHERE
-        /* %JoinFKPK(deleted,Article," = "," AND") */
-        deleted.IdArticle = Article.IdArticle AND
-        NOT EXISTS (
-          SELECT * FROM Package
-          WHERE
-            /* %JoinFKPK(Package,Article," = "," AND") */
-            Package.IdArticle = Article.IdArticle
-        )
-    )
-    BEGIN
-      SELECT @errno  = 30010,
-             @errmsg = 'Cannot delete last Package because Article exists.'
-      GOTO error
-    END
-
-
-    /* erwin Builtin Trigger */
-    RETURN
-error:
-   RAISERROR (@errmsg, -- Message text.
-              @severity, -- Severity (0~25).
-              @state) -- State (0~255).
-    rollback transaction
-END
-
-go
-
-
-CREATE TRIGGER tU_Package ON Package FOR UPDATE AS
-/* erwin Builtin Trigger */
-/* UPDATE trigger on Package */
-BEGIN
-  DECLARE  @numrows int,
-           @nullcnt int,
-           @validcnt int,
-           @insIdArticle integer, 
-           @insIdOrder integer,
-           @errno   int,
-           @severity int,
-           @state    int,
-           @errmsg  varchar(255)
-
-  SELECT @numrows = @@rowcount
-  /* erwin Builtin Trigger */
-  /* Order  Package on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0002ad5e", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
-  IF
-    /* %ChildFK(" OR",UPDATE) */
-    UPDATE(IdOrder)
-  BEGIN
-    SELECT @nullcnt = 0
-    SELECT @validcnt = count(*)
-      FROM inserted,Order
-        WHERE
-          /* %JoinFKPK(inserted,Order) */
-          inserted.IdOrder = Order.IdOrder
-    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
-    IF @validcnt + @nullcnt != @numrows
-    BEGIN
-      SELECT @errno  = 30007,
-             @errmsg = 'Cannot update Package because Order does not exist.'
-      GOTO error
-    END
-  END
-
-  /* erwin Builtin Trigger */
-  /* Article  Package on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Article"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
-  IF
-    /* %ChildFK(" OR",UPDATE) */
-    UPDATE(IdArticle)
-  BEGIN
-    SELECT @nullcnt = 0
-    SELECT @validcnt = count(*)
-      FROM inserted,Article
-        WHERE
-          /* %JoinFKPK(inserted,Article) */
-          inserted.IdArticle = Article.IdArticle
-    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
-    IF @validcnt + @nullcnt != @numrows
-    BEGIN
-      SELECT @errno  = 30007,
-             @errmsg = 'Cannot update Package because Article does not exist.'
       GOTO error
     END
   END

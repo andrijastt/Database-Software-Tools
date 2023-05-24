@@ -21,21 +21,50 @@ public class sa190222_OrderOperations implements OrderOperations {
     @Override
     public int addArticle(int idOrder, int idArticle, int count) {
         
-        Connection conn = DB.getInstance().getConnection();
+        Connection conn = DB.getInstance().getConnection();                        
+        int articleCount = 0;        
+        String queryUI = "";
         
-        String query = "Select * from Article where Count > ? and IdArticle = ?";
-        try(PreparedStatement ps = conn.prepareStatement(query)) {
+        String selectQuery = "Select * from Item where IdOrder = ? and IdArticle = ?";
+        try(PreparedStatement psSelect = conn.prepareStatement(selectQuery);) {
             
+            psSelect.setInt(1, idOrder);
+            psSelect.setInt(2, idArticle);
+            
+            try(ResultSet rsSelect = psSelect.executeQuery();){                                                
+                if(rsSelect.next()){
+                    queryUI = "UPDATE Item SET Count = Count + ? where IdOrder = ? and IdArticle = ?";
+                    articleCount = rsSelect.getInt(2);
+                } else {
+                    queryUI = "INSERT INTO Item(Count, IdOrder, IdArticle) values (?, ?, ?)";
+                }                 
+            }             
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                        
+        String query = "Select * from Article where Count > ? + ? and IdArticle = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query)) {            
             ps.setInt(1, count);
-            ps.setInt(2, idArticle);
+            ps.setInt(2, articleCount);
+            ps.setInt(3, idArticle);
             
             try(ResultSet rs = ps.executeQuery()){
-         
-                
-                
-            } catch (SQLException ex) {
-                Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
-            }
+                         
+                if(rs.next()){          // has the amount
+                  
+                    try(PreparedStatement psUI = conn.prepareStatement(queryUI, Statement.RETURN_GENERATED_KEYS);){                        
+                        psUI.setInt(1, count);
+                        psUI.setInt(2, idOrder);
+                        psUI.setInt(3, idArticle);                        
+                        psUI.executeUpdate();                        
+                        ResultSet rsUI = psUI.getGeneratedKeys();
+                        if(rsUI.next()){
+                            return rsUI.getInt(1);
+                        }                        
+                    }                    
+                }                 
+            } 
                     
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
@@ -119,6 +148,9 @@ public class sa190222_OrderOperations implements OrderOperations {
         
         String ret = new sa190222_OrderOperations().getState(1);
         System.out.println(ret);
+        
+        int retInt = new sa190222_OrderOperations().addArticle(1, 2, 15);
+        System.out.println(retInt);
     }
     
 }

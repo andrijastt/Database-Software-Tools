@@ -258,9 +258,9 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-//        int ret = new sa190222_BuyerOperations().createBuyer("Milos", 1);
-//        ret = new sa190222_BuyerOperations().createOrder(3);
-//        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
+        int ret = new sa190222_BuyerOperations().createBuyer("Milos", 1);
+        ret = new sa190222_BuyerOperations().createOrder(1);
+        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
                     
             List<Integer> list = new sa190222_BuyerOperations().getOrders(1);
             
