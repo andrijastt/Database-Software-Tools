@@ -5,8 +5,11 @@
 package rs.etf.sab.student;
 
 import java.math.BigDecimal;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rs.etf.sab.operations.TransactionOperations;
 
 /**
@@ -16,13 +19,47 @@ import rs.etf.sab.operations.TransactionOperations;
 public class sa190222_TransactionOperations implements TransactionOperations {
 
     @Override
-    public BigDecimal getBuyerTransactionsAmmount(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getBuyerTransactionsAmmount(int idBuyer) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select Sum(AmountPaid) from Transaction where IdBuyer = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idBuyer);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){                    
+                    return rs.getBigDecimal(1);                    
+                }
+                return new BigDecimal(0);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        
+        return new BigDecimal(-1);
     }
 
     @Override
-    public BigDecimal getShopTransactionsAmmount(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getShopTransactionsAmmount(int idShop) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select Sum(AmountPaid) from Transaction where IdShop = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idShop);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){                    
+                    return rs.getBigDecimal(1);                    
+                }
+                return new BigDecimal(0);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        
+        return new BigDecimal(-1);
     }
 
     @Override
