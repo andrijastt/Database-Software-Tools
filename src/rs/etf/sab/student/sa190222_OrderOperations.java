@@ -60,7 +60,7 @@ public class sa190222_OrderOperations implements OrderOperations {
                         psUI.executeUpdate();                        
                         ResultSet rsUI = psUI.getGeneratedKeys();
                         if(rsUI.next()){
-                            return rsUI.getInt(1);
+                            return rsUI.getInt(1);      // TODO za update
                         }                        
                     }                    
                 }                 
@@ -74,8 +74,26 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public int removeArticle(int i, int i1) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int removeArticle(int idOrder, int idArticle) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Delete from Item where IdOrder = ? and IdArticle = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idOrder);
+            ps.setInt(2, idArticle);
+            
+            int ret = ps.executeUpdate();            
+            if(ret == 0) return -1;
+            return ret;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+        return -1;
     }
 
     @Override
@@ -149,7 +167,8 @@ public class sa190222_OrderOperations implements OrderOperations {
         String ret = new sa190222_OrderOperations().getState(1);
         System.out.println(ret);
         
-        int retInt = new sa190222_OrderOperations().addArticle(1, 2, 15);
+        int retInt = new sa190222_OrderOperations().addArticle(1, 2, 15);  
+        retInt = new sa190222_OrderOperations().removeArticle(1, 2); 
         System.out.println(retInt);
     }
     
