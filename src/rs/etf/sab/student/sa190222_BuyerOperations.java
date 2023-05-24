@@ -167,8 +167,42 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     }
 
     @Override
-    public int createOrder(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int createOrder(int IdBuyer) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String selectQuery = "Select * from Buyer where IdBuyer = ?";
+        try(PreparedStatement psSelect = conn.prepareStatement(selectQuery);) {            
+            
+            psSelect.setInt(1, IdBuyer);
+            try(ResultSet rsSelect = psSelect.executeQuery();){                
+                if(!rsSelect.next()){
+                    return -1;
+                }                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        String query = "Insert into [Order] (IdBuyer, Status) values (?, 'created')";
+        try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);) {
+            
+            ps.setInt(1, IdBuyer);
+            ps.executeUpdate();
+            
+            try(ResultSet rs = ps.getGeneratedKeys()){
+                if(rs.next()){
+                    return rs.getInt(1);                    
+                }
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_BuyerOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
     }
 
     @Override
@@ -201,8 +235,8 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_BuyerOperations().createBuyer("Andrija", 2);
-        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
+        int ret = new sa190222_BuyerOperations().createOrder(2);
+//        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
         
         
         System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
