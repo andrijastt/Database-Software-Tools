@@ -6,6 +6,7 @@ package rs.etf.sab.student;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,23 +64,90 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     }
 
     @Override
-    public List<Integer> getTransationsForBuyer(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public List<Integer> getTransationsForBuyer(int idBuyer) {
+        
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select IdTransaction from Transaction where IdBuyer = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idBuyer);
+            try(ResultSet rs = ps.executeQuery();){                
+                while(rs.next()){                    
+                    ret.add(rs.getInt(1));
+                }
+                return ret;
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;
     }
 
     @Override
-    public int getTransactionForBuyersOrder(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getTransactionForBuyersOrder(int idOrder) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select IdTransaction from Transaction where IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idOrder);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){                    
+                    return rs.getInt(1);                    
+                }                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }                
+        return -1;
     }
 
     @Override
-    public int getTransactionForShopAndOrder(int i, int i1) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getTransactionForShopAndOrder(int idOrder, int idShop) {
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select IdTransaction from Transaction where IdOrder = ? and IdShop = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idOrder);
+            ps.setInt(2, idShop);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){                    
+                    return rs.getInt(1);                    
+                }                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }                
+        return -1;
     }
 
     @Override
-    public List<Integer> getTransationsForShop(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public List<Integer> getTransationsForShop(int idShop) {
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select IdTransaction from Transaction where IdShop = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idShop);
+            try(ResultSet rs = ps.executeQuery();){                
+                while(rs.next()){                    
+                    ret.add(rs.getInt(1));
+                }
+                return ret;
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;
     }
 
     @Override
