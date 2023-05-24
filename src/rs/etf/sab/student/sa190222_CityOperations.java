@@ -219,17 +219,9 @@ public class sa190222_CityOperations implements CityOperations {
     
     public static void main(String[] args) {
         
-        int ret = new sa190222_CityOperations().createCity("Novi Sad");
-        ret = new sa190222_CityOperations().connectCities(1, 3, 1);
-        System.out.println(ret);
-        
-        List<Integer> ret0 = new sa190222_CityOperations().getShops(3);
-        
-        System.out.println(ret);
-        ret0 = new sa190222_CityOperations().getConnectedCities(1);
-        System.out.println(ret);
-        ret0 = new sa190222_CityOperations().getConnectedCities(2);
-        System.out.println(ret);
+        int ret = new sa190222_CityOperations().connectCities(1, 2, 4);
+//        ret = new sa190222_CityOperations().createCity("Aleksinac");
+        System.out.println(ret);                
         
     }
     

@@ -303,10 +303,8 @@ public class sa190222_ShopOperations implements ShopOperations {
     }
     
     public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().setDiscount(1, 10);
-        List<Integer> ret0 = new sa190222_ShopOperations().getArticles(2);
-        System.out.println(ret);
-        ret = new sa190222_ShopOperations().getDiscount(1);
+        int ret = new sa190222_ShopOperations().increaseArticleCount(1, 20);
+        ret = new sa190222_ShopOperations().increaseArticleCount(2, 40);
         System.out.println(ret);
     }
 }

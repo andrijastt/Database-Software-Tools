@@ -201,7 +201,10 @@ public class sa190222_BuyerOperations implements BuyerOperations {
     
     public static void main(String[] args) {
         
-        BigDecimal ret = new sa190222_BuyerOperations().getCredit(0);
+        int ret = new sa190222_BuyerOperations().createBuyer("Andrija", 2);
+        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
+        
+        
         System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
     }
     

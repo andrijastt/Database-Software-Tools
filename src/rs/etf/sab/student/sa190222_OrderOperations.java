@@ -19,8 +19,29 @@ import rs.etf.sab.operations.OrderOperations;
 public class sa190222_OrderOperations implements OrderOperations {
 
     @Override
-    public int addArticle(int i, int i1, int i2) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int addArticle(int idOrder, int idArticle, int count) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select * from Article where Count > ? and IdArticle = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query)) {
+            
+            ps.setInt(1, count);
+            ps.setInt(2, idArticle);
+            
+            try(ResultSet rs = ps.executeQuery()){
+         
+                
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                    
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;        
     }
 
     @Override

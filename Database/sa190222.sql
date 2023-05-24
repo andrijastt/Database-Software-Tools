@@ -36,25 +36,27 @@ CREATE TABLE [Line]
 	[IdCity1]            integer  NOT NULL ,
 	[Distance]           integer  NOT NULL 
 	CONSTRAINT [Default_Value_339_742414176]
-		 DEFAULT  1
+		 DEFAULT  1,
+	[IdLine]             integer  IDENTITY  NOT NULL 
 )
 go
 
 CREATE TABLE [Order]
 ( 
 	[IdOrder]            integer  IDENTITY  NOT NULL ,
-	[IdBuyer]            integer  NOT NULL ,
-	[Status]             char(18)  NULL 
+	[IdBuyer]            integer  NULL ,
+	[Status]             char(100)  NOT NULL ,
+	[CurrentCity]        integer  NULL ,
+	[SentTime]           datetime  NULL ,
+	[ReceivedTime]       datetime  NULL 
 )
 go
 
 CREATE TABLE [Package]
 ( 
-	[IdShop]             integer  NULL ,
 	[IdArticle]          integer  NOT NULL ,
 	[Count]              integer  NOT NULL ,
-	[IdOrder]            integer  NOT NULL ,
-	[CurrentCity]        integer  NOT NULL 
+	[IdOrder]            integer  NOT NULL 
 )
 go
 
@@ -67,16 +69,27 @@ CREATE TABLE [Shop]
 		 DEFAULT  0
 	CONSTRAINT [Discount_0_100]
 		CHECK  ( Discount BETWEEN 0 AND 100 ),
-	[IdCity]             integer  NOT NULL 
+	[IdCity]             integer  NOT NULL ,
+	[Balance]            decimal(10,3)  NOT NULL 
+	CONSTRAINT [ZERO_743014288]
+		 DEFAULT  0
 )
 go
 
 CREATE TABLE [Transaction]
 ( 
-	[AmountPaid]         char(18)  NULL ,
+	[AmountPaid]         decimal(10,3)  NOT NULL 
+	CONSTRAINT [ZERO_1565478598]
+		 DEFAULT  0,
 	[IdOrder]            integer  NOT NULL ,
 	[IdShop]             integer  NOT NULL ,
-	[IdBuyer]            integer  NOT NULL 
+	[IdBuyer]            integer  NOT NULL ,
+	[ExecutionTime]      datetime  NULL ,
+	[SystemCut]          integer  NOT NULL 
+	CONSTRAINT [FIVE_1581478741]
+		 DEFAULT  5
+	CONSTRAINT [Three_or_Five_141057686]
+		CHECK  ( SystemCut BETWEEN 3 AND 5 )
 )
 go
 
@@ -93,7 +106,7 @@ ALTER TABLE [City]
 go
 
 ALTER TABLE [Line]
-	ADD CONSTRAINT [XPKLine] PRIMARY KEY  CLUSTERED ([IdCity2] ASC,[IdCity1] ASC)
+	ADD CONSTRAINT [XPKLine] PRIMARY KEY  CLUSTERED ([IdLine] ASC)
 go
 
 ALTER TABLE [Order]
@@ -146,12 +159,6 @@ ALTER TABLE [Order]
 		ON UPDATE NO ACTION
 go
 
-
-ALTER TABLE [Package]
-	ADD CONSTRAINT [R_13] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
 
 ALTER TABLE [Package]
 	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdArticle]) REFERENCES [Article]([IdArticle])
@@ -803,8 +810,7 @@ BEGIN
   DECLARE  @numrows int,
            @nullcnt int,
            @validcnt int,
-           @insIdCity2 integer, 
-           @insIdCity1 integer,
+           @insIdLine integer,
            @errno   int,
            @severity int,
            @state    int,
@@ -974,7 +980,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Order  Package on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003596c", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* ERWIN_RELATION:CHECKSUM="0003781e", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Package"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -1035,7 +1041,8 @@ BEGIN
           /* %JoinFKPK(inserted,Buyer) */
           inserted.IdBuyer = Buyer.IdBuyer
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdBuyer IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1069,7 +1076,7 @@ BEGIN
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
     /* Order  Package on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00036b30", PARENT_OWNER="", PARENT_TABLE="Order"
+    /* ERWIN_RELATION:CHECKSUM="00026093", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Package"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -1113,29 +1120,6 @@ BEGIN
       GOTO error
     END
 
-    /* erwin Builtin Trigger */
-    /* Shop  Package on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_13", FK_COLUMNS="IdShop" */
-    IF EXISTS (SELECT * FROM deleted,Shop
-      WHERE
-        /* %JoinFKPK(deleted,Shop," = "," AND") */
-        deleted.IdShop = Shop.IdShop AND
-        NOT EXISTS (
-          SELECT * FROM Package
-          WHERE
-            /* %JoinFKPK(Package,Shop," = "," AND") */
-            Package.IdShop = Shop.IdShop
-        )
-    )
-    BEGIN
-      SELECT @errno  = 30010,
-             @errmsg = 'Cannot delete last Package because Shop exists.'
-      GOTO error
-    END
-
 
     /* erwin Builtin Trigger */
     RETURN
@@ -1166,7 +1150,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Order  Package on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003e6bd", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* ERWIN_RELATION:CHECKSUM="0002ad5e", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Package"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -1216,33 +1200,6 @@ BEGIN
     END
   END
 
-  /* erwin Builtin Trigger */
-  /* Shop  Package on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_13", FK_COLUMNS="IdShop" */
-  IF
-    /* %ChildFK(" OR",UPDATE) */
-    UPDATE(IdShop)
-  BEGIN
-    SELECT @nullcnt = 0
-    SELECT @validcnt = count(*)
-      FROM inserted,Shop
-        WHERE
-          /* %JoinFKPK(inserted,Shop) */
-          inserted.IdShop = Shop.IdShop
-    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdShop IS NULL
-    IF @validcnt + @nullcnt != @numrows
-    BEGIN
-      SELECT @errno  = 30007,
-             @errmsg = 'Cannot update Package because Shop does not exist.'
-      GOTO error
-    END
-  END
-
 
   /* erwin Builtin Trigger */
   RETURN
@@ -1268,7 +1225,7 @@ BEGIN
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
     /* Shop  Transaction on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="0003bc7c", PARENT_OWNER="", PARENT_TABLE="Shop"
+    /* ERWIN_RELATION:CHECKSUM="0002e4b0", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
@@ -1281,24 +1238,6 @@ BEGIN
     BEGIN
       SELECT @errno  = 30001,
              @errmsg = 'Cannot delete Shop because Transaction exists.'
-      GOTO error
-    END
-
-    /* erwin Builtin Trigger */
-    /* Shop  Package on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_13", FK_COLUMNS="IdShop" */
-    IF EXISTS (
-      SELECT * FROM deleted,Package
-      WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdShop = deleted.IdShop
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Shop because Package exists.'
       GOTO error
     END
 
@@ -1372,7 +1311,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Shop  Transaction on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="000449b1", PARENT_OWNER="", PARENT_TABLE="Shop"
+  /* ERWIN_RELATION:CHECKSUM="000361e0", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
@@ -1389,29 +1328,6 @@ BEGIN
     BEGIN
       SELECT @errno  = 30005,
              @errmsg = 'Cannot update Shop because Transaction exists.'
-      GOTO error
-    END
-  END
-
-  /* erwin Builtin Trigger */
-  /* Shop  Package on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Package"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_13", FK_COLUMNS="IdShop" */
-  IF
-    /* %ParentPK(" OR",UPDATE) */
-    UPDATE(IdShop)
-  BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Package
-      WHERE
-        /*  %JoinFKPK(Package,deleted," = "," AND") */
-        Package.IdShop = deleted.IdShop
-    )
-    BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Shop because Package exists.'
       GOTO error
     END
   END
