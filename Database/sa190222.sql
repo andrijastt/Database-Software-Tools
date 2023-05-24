@@ -3,11 +3,11 @@ GO
 
 USE ProdavnicaArtikala
 GO
-
+ 
 CREATE TABLE [Article]
 ( 
 	[IdArticle]          integer  IDENTITY  NOT NULL ,
-	[Name]               char(100)  NOT NULL ,
+	[Name]               varchar(100)  NOT NULL ,
 	[Price]              decimal(10,3)  NOT NULL ,
 	[Count]              integer  NOT NULL ,
 	[IdShop]             integer  NULL 
@@ -17,7 +17,7 @@ go
 CREATE TABLE [Buyer]
 ( 
 	[IdBuyer]            integer  IDENTITY  NOT NULL ,
-	[Name]               char(100)  NOT NULL ,
+	[Name]               varchar(100)  NOT NULL ,
 	[Wallet]             decimal(10,3)  NOT NULL ,
 	[IdCity]             integer  NULL 
 )
@@ -26,7 +26,7 @@ go
 CREATE TABLE [City]
 ( 
 	[IdCity]             integer  IDENTITY  NOT NULL ,
-	[Name]               char(100)  NOT NULL 
+	[Name]               varchar(100)  NOT NULL 
 )
 go
 
@@ -54,7 +54,7 @@ CREATE TABLE [Order]
 ( 
 	[IdOrder]            integer  IDENTITY  NOT NULL ,
 	[IdBuyer]            integer  NULL ,
-	[Status]             char(100)  NOT NULL ,
+	[Status]             varchar(100)  NOT NULL ,
 	[CurrentCity]        integer  NULL ,
 	[SentTime]           datetime  NULL ,
 	[ReceivedTime]       datetime  NULL 
@@ -64,7 +64,7 @@ go
 CREATE TABLE [Shop]
 ( 
 	[IdShop]             integer  IDENTITY  NOT NULL ,
-	[Name]               char(100)  NOT NULL ,
+	[Name]               varchar(100)  NOT NULL ,
 	[Discount]           integer  NOT NULL 
 	CONSTRAINT [ZERO]
 		 DEFAULT  0
