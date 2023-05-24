@@ -214,8 +214,23 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public int getBuyer(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public int getBuyer(int idOrder) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select IdBuyer from [Order] where IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            
+            ps.setInt(1, idOrder);            
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){
+                    return rs.getInt(1);
+                }                
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return -1;
     }
 
     @Override
@@ -228,7 +243,7 @@ public class sa190222_OrderOperations implements OrderOperations {
         String ret = new sa190222_OrderOperations().getState(1);
         System.out.println(ret);
         
-        int retInt = new sa190222_OrderOperations().addArticle(1, 2, 15);  
+        int retInt = new sa190222_OrderOperations().getBuyer(2);  
 //        retInt = new sa190222_OrderOperations().removeArticle(1, 2); 
 
         List<Integer> listRet = new sa190222_OrderOperations().getItems(1);
