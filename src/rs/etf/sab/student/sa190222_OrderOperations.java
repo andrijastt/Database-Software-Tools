@@ -128,8 +128,25 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public BigDecimal getFinalPrice(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getFinalPrice(int idOrder) {
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select Sum(I.[Count] * A.Price * (100 - S.Discount) / 100)\n" +
+        "from [Order] O join Item I on O.IdOrder = I.IdOrder join Article A on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop\n" +
+        "where O.IdOrder = ?";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);) {            
+            
+            ps.setInt(1, idOrder);                        
+            try(ResultSet rs = ps.executeQuery();){
+                if(rs.next()) return rs.getBigDecimal(1);            
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new BigDecimal(-1);
     }
 
     @Override
@@ -290,7 +307,7 @@ public class sa190222_OrderOperations implements OrderOperations {
 //        Calendar cal = new sa190222_OrderOperations().getSentTime(1);
 //        System.out.println(cal);
         
-        BigDecimal retBig = new sa190222_OrderOperations().getDiscountSum(1);
+        BigDecimal retBig = new sa190222_OrderOperations().getFinalPrice(1);
         System.out.println("rs.etf.sab.student.sa190222_OrderOperations.main() " + retBig);
         
     }
