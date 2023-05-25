@@ -3,7 +3,7 @@ GO
 
 USE ProdavnicaArtikala
 GO
- 
+
 CREATE TABLE [Article]
 ( 
 	[IdArticle]          integer  IDENTITY  NOT NULL ,
@@ -82,15 +82,16 @@ CREATE TABLE [Transaction]
 	[AmountPaid]         decimal(10,3)  NOT NULL 
 	CONSTRAINT [ZERO_1565478598]
 		 DEFAULT  0,
-	[IdOrder]            integer  NOT NULL ,
-	[IdShop]             integer  NOT NULL ,
-	[IdBuyer]            integer  NOT NULL ,
+	[IdOrder]            integer  NULL ,
+	[IdShop]             integer  NULL ,
+	[IdBuyer]            integer  NULL ,
 	[ExecutionTime]      datetime  NULL ,
 	[SystemCut]          integer  NOT NULL 
 	CONSTRAINT [FIVE_1581478741]
 		 DEFAULT  5
 	CONSTRAINT [Three_or_Five_141057686]
-		CHECK  ( SystemCut BETWEEN 3 AND 5 )
+		CHECK  ( SystemCut BETWEEN 3 AND 5 ),
+	[IdTransaction]      integer  IDENTITY  NOT NULL 
 )
 go
 
@@ -123,7 +124,7 @@ ALTER TABLE [Shop]
 go
 
 ALTER TABLE [Transaction]
-	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdOrder] ASC,[IdShop] ASC,[IdBuyer] ASC)
+	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdTransaction] ASC)
 go
 
 
@@ -1495,9 +1496,7 @@ BEGIN
   DECLARE  @numrows int,
            @nullcnt int,
            @validcnt int,
-           @insIdOrder integer, 
-           @insIdShop integer, 
-           @insIdBuyer integer,
+           @insIdTransaction integer,
            @errno   int,
            @severity int,
            @state    int,
@@ -1506,7 +1505,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Buyer  Transaction on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003d024", PARENT_OWNER="", PARENT_TABLE="Buyer"
+  /* ERWIN_RELATION:CHECKSUM="000440a1", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
@@ -1521,7 +1520,8 @@ BEGIN
           /* %JoinFKPK(inserted,Buyer) */
           inserted.IdBuyer = Buyer.IdBuyer
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdBuyer IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1547,7 +1547,8 @@ BEGIN
           /* %JoinFKPK(inserted,Shop) */
           inserted.IdShop = Shop.IdShop
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdShop IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1573,7 +1574,8 @@ BEGIN
           /* %JoinFKPK(inserted,Order) */
           inserted.IdOrder = Order.IdOrder
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdOrder IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,

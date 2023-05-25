@@ -151,28 +151,100 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     }
 
     @Override
-    public Calendar getTimeOfExecution(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Calendar getTimeOfExecution(int idTransacction) {
+        
+        Connection conn = DB.getInstance().getConnection();
+        
+        String query = "Select ExecutionTime from Transaction where IdTransaction  = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);){                        
+            ps.setInt(1, idTransacction);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()){
+                    if(rs.getDate(1) == null) return null;
+                    java.util.Date date = rs.getDate(1);                    
+                    Calendar ret = Calendar.getInstance();
+                    ret.setTime(date);
+                    return ret;
+                }
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+        
     }
 
     @Override
-    public BigDecimal getAmmountThatBuyerPayedForOrder(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getAmmountThatBuyerPayedForOrder(int idOrder) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select AmountPaid from Transaction where IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);){                        
+            ps.setInt(1, idOrder);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()) return rs.getBigDecimal(1);                
+            }            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new BigDecimal(-1);
     }
 
     @Override
-    public BigDecimal getAmmountThatShopRecievedForOrder(int i, int i1) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getAmmountThatShopRecievedForOrder(int idShop, int idOrder) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select (AmountPaid * (100 - SystemCut) / 100) from Transaction where IdShop = ? and IdOrder = ?";
+        try(PreparedStatement ps = conn.prepareStatement(query);){
+            
+            ps.setInt(1, idShop);
+            ps.setInt(2, idOrder);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()) return rs.getBigDecimal(1);                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                
+        return new BigDecimal(-1);
     }
 
     @Override
-    public BigDecimal getTransactionAmount(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public BigDecimal getTransactionAmount(int idTransaction) {
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select AmountPaid from Transaction where IdTransaction = ?";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);){
+            
+            ps.setInt(1, idTransaction);
+            try(ResultSet rs = ps.executeQuery();){                
+                if(rs.next()) return rs.getBigDecimal(1);                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new BigDecimal(-1);
     }
 
     @Override
     public BigDecimal getSystemProfit() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        
+        Connection conn = DB.getInstance().getConnection();        
+        String query = "Select SUM(AmountPaid * (100 - SystemCut) / 100) from Transaction";
+        
+        try(PreparedStatement ps = conn.prepareStatement(query);
+                ResultSet rs = ps.executeQuery();) {            
+            if(rs.next()) return rs.getBigDecimal(1);            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new BigDecimal(0);
     }
     
 }
