@@ -216,15 +216,5 @@ public class sa190222_CityOperations implements CityOperations {
         
         return null;
     }
-    
-    public static void main(String[] args) {
         
-        int ret = new sa190222_CityOperations().createCity("Aleksinac");  
-        ret = new sa190222_CityOperations().createCity("Beograd");  
-        ret = new sa190222_CityOperations().createCity("Novi Sad");  
-        ret = new sa190222_CityOperations().connectCities(1, 2, 4);
-        System.out.println(ret);                
-        
-    }
-    
 }

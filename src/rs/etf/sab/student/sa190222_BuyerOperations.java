@@ -254,19 +254,5 @@ public class sa190222_BuyerOperations implements BuyerOperations {
         }
        
         return new BigDecimal(-1);
-    }
-    
-    public static void main(String[] args) {
-        
-        int ret = new sa190222_BuyerOperations().createBuyer("Milos", 1);
-        ret = new sa190222_BuyerOperations().createOrder(1);
-        BigDecimal retB = new sa190222_BuyerOperations().increaseCredit(1, new BigDecimal(5000));
-                    
-            List<Integer> list = new sa190222_BuyerOperations().getOrders(1);
-            
-            System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main()" + list);
-        
-//        System.out.println("rs.etf.sab.student.sa190222_BuyerOperations.main() " + ret);
-    }
-    
+    }            
 }

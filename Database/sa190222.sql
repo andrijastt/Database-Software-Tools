@@ -32,7 +32,7 @@ go
 
 CREATE TABLE [Item]
 ( 
-	[IdArticle]          integer  NOT NULL ,
+	[IdArticle]          integer  NULL ,
 	[Count]              integer  NOT NULL ,
 	[IdOrder]            integer  NULL ,
 	[IdItem]             integer  IDENTITY  NOT NULL 
@@ -42,7 +42,7 @@ go
 CREATE TABLE [Line]
 ( 
 	[IdCity2]            integer  NOT NULL ,
-	[IdCity1]            integer  NOT NULL ,
+	[IdCity1]            integer  NULL ,
 	[Distance]           integer  NOT NULL 
 	CONSTRAINT [Default_Value_339_742414176]
 		 DEFAULT  1,
@@ -130,73 +130,73 @@ go
 
 ALTER TABLE [Article]
 	ADD CONSTRAINT [R_1] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Buyer]
 	ADD CONSTRAINT [R_2] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Item]
 	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdArticle]) REFERENCES [Article]([IdArticle])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 ALTER TABLE [Item]
 	ADD CONSTRAINT [R_15] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Line]
 	ADD CONSTRAINT [R_9] FOREIGN KEY ([IdCity2]) REFERENCES [City]([IdCity])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 ALTER TABLE [Line]
 	ADD CONSTRAINT [R_10] FOREIGN KEY ([IdCity1]) REFERENCES [City]([IdCity])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Order]
 	ADD CONSTRAINT [R_3] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Shop]
 	ADD CONSTRAINT [R_12] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_11] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_16] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_17] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 go
 
@@ -210,22 +210,16 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Article  Item on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="000207cc", PARENT_OWNER="", PARENT_TABLE="Article"
+    /* Article  Item on parent delete cascade */
+    /* ERWIN_RELATION:CHECKSUM="0001e296", PARENT_OWNER="", PARENT_TABLE="Article"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
-    IF EXISTS (
-      SELECT * FROM deleted,Item
+    DELETE Item
+      FROM Item,deleted
       WHERE
         /*  %JoinFKPK(Item,deleted," = "," AND") */
         Item.IdArticle = deleted.IdArticle
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Article because Item exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
     /* Shop  Article on child delete no action */
@@ -351,40 +345,28 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Buyer  Transaction on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="0002e66f", PARENT_OWNER="", PARENT_TABLE="Buyer"
+    /* Buyer  Transaction on parent delete cascade */
+    /* ERWIN_RELATION:CHECKSUM="00028c52", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    DELETE Transaction
+      FROM Transaction,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdBuyer = deleted.IdBuyer
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Buyer because Transaction exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* Buyer  Order on parent delete no action */
+    /* Buyer  Order on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Order"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_3", FK_COLUMNS="IdBuyer" */
-    IF EXISTS (
-      SELECT * FROM deleted,Order
+    DELETE Order
+      FROM Order,deleted
       WHERE
         /*  %JoinFKPK(Order,deleted," = "," AND") */
         Order.IdBuyer = deleted.IdBuyer
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Buyer because Order exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
     /* City  Buyer on child delete no action */
@@ -533,76 +515,52 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* City  Shop on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="000370e3", PARENT_OWNER="", PARENT_TABLE="City"
+    /* City  Shop on parent delete cascade */
+    /* ERWIN_RELATION:CHECKSUM="0002c29f", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Shop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_12", FK_COLUMNS="IdCity" */
-    IF EXISTS (
-      SELECT * FROM deleted,Shop
+    DELETE Shop
+      FROM Shop,deleted
       WHERE
         /*  %JoinFKPK(Shop,deleted," = "," AND") */
         Shop.IdCity = deleted.IdCity
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete City because Shop exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* City  Line on parent delete no action */
+    /* City  Line on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_10", FK_COLUMNS="IdCity1" */
-    IF EXISTS (
-      SELECT * FROM deleted,Line
+    DELETE Line
+      FROM Line,deleted
       WHERE
         /*  %JoinFKPK(Line,deleted," = "," AND") */
         Line.IdCity1 = deleted.IdCity
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete City because Line exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* City  Line on parent delete no action */
+    /* City  Line on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_9", FK_COLUMNS="IdCity2" */
-    IF EXISTS (
-      SELECT * FROM deleted,Line
+    DELETE Line
+      FROM Line,deleted
       WHERE
         /*  %JoinFKPK(Line,deleted," = "," AND") */
         Line.IdCity2 = deleted.IdCity
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete City because Line exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* City  Buyer on parent delete no action */
+    /* City  Buyer on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Buyer"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_2", FK_COLUMNS="IdCity" */
-    IF EXISTS (
-      SELECT * FROM deleted,Buyer
+    DELETE Buyer
+      FROM Buyer,deleted
       WHERE
         /*  %JoinFKPK(Buyer,deleted," = "," AND") */
         Buyer.IdCity = deleted.IdCity
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete City because Buyer exists.'
-      GOTO error
-    END
 
 
     /* erwin Builtin Trigger */
@@ -821,7 +779,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Order  Item on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0002cc69", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* ERWIN_RELATION:CHECKSUM="0002db8a", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -863,7 +821,8 @@ BEGIN
           /* %JoinFKPK(inserted,Article) */
           inserted.IdArticle = Article.IdArticle
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdArticle IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -970,7 +929,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* City  Line on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="000276af", PARENT_OWNER="", PARENT_TABLE="City"
+  /* ERWIN_RELATION:CHECKSUM="00029fe3", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_10", FK_COLUMNS="IdCity1" */
@@ -985,7 +944,8 @@ BEGIN
           /* %JoinFKPK(inserted,City) */
           inserted.IdCity1 = City.IdCity
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
+    select @nullcnt = count(*) from inserted where
+      inserted.IdCity1 IS NULL
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1044,40 +1004,28 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Order  Item on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="0002ffff", PARENT_OWNER="", PARENT_TABLE="Order"
+    /* Order  Item on parent delete cascade */
+    /* ERWIN_RELATION:CHECKSUM="0002a0d3", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
-    IF EXISTS (
-      SELECT * FROM deleted,Item
+    DELETE Item
+      FROM Item,deleted
       WHERE
         /*  %JoinFKPK(Item,deleted," = "," AND") */
         Item.IdOrder = deleted.IdOrder
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Order because Item exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* Order  Transaction on parent delete no action */
+    /* Order  Transaction on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_11", FK_COLUMNS="IdOrder" */
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    DELETE Transaction
+      FROM Transaction,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdOrder = deleted.IdOrder
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Order because Transaction exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
     /* Buyer  Order on child delete no action */
@@ -1226,40 +1174,28 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Shop  Transaction on parent delete no action */
-    /* ERWIN_RELATION:CHECKSUM="0002e4b0", PARENT_OWNER="", PARENT_TABLE="Shop"
+    /* Shop  Transaction on parent delete cascade */
+    /* ERWIN_RELATION:CHECKSUM="000297a4", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    DELETE Transaction
+      FROM Transaction,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdShop = deleted.IdShop
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Shop because Transaction exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
-    /* Shop  Article on parent delete no action */
+    /* Shop  Article on parent delete cascade */
     /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Article"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_1", FK_COLUMNS="IdShop" */
-    IF EXISTS (
-      SELECT * FROM deleted,Article
+    DELETE Article
+      FROM Article,deleted
       WHERE
         /*  %JoinFKPK(Article,deleted," = "," AND") */
         Article.IdShop = deleted.IdShop
-    )
-    BEGIN
-      SELECT @errno  = 30001,
-             @errmsg = 'Cannot delete Shop because Article exists.'
-      GOTO error
-    END
 
     /* erwin Builtin Trigger */
     /* City  Shop on child delete no action */

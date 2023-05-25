@@ -71,14 +71,6 @@ public class sa190222_ArticleOperations implements ArticleOperations {
             Logger.getLogger(sa190222_ArticleOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
        return ret;
-    }
-    
-    public static void main(String[] args) {
-        
-        int ret = new sa190222_ArticleOperations().createArticle(1, "Mleko", 150);
-        ret = new sa190222_ArticleOperations().createArticle(1, "Jogurt", 180);
-        System.out.println("rs.etf.sab.student.sa190222_ArticleOperations.main() " + ret);
-        
-    }
+    }       
     
 }

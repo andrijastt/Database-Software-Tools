@@ -301,12 +301,5 @@ public class sa190222_ShopOperations implements ShopOperations {
         
         return -1;
     }
-    
-    public static void main(String[] args) {
-        int ret = new sa190222_ShopOperations().createShop("Rival", "Aleksinac");
-        ret = new sa190222_ShopOperations().increaseArticleCount(1, 20);
-        ret = new sa190222_ShopOperations().increaseArticleCount(2, 40);
-        ret = new sa190222_ShopOperations().setDiscount(1, 10);
-        System.out.println(ret);
-    }
+        
 }
