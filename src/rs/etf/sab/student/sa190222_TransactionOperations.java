@@ -235,7 +235,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getSystemProfit() {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select SUM(AmountPaid * (100 - SystemCut) / 100) from Transaction";
+        String query = "Select SUM(AmountPaid * SystemCut / 100) from Transaction";
         
         try(PreparedStatement ps = conn.prepareStatement(query);
                 ResultSet rs = ps.executeQuery();) {            
