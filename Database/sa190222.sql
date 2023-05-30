@@ -77,6 +77,13 @@ CREATE TABLE [Shop]
 )
 go
 
+CREATE TABLE [SimulationTime]
+( 
+	[Id]                 integer  NOT NULL ,
+	[Time]               datetime  NOT NULL 
+)
+go
+
 CREATE TABLE [Transaction]
 ( 
 	[AmountPaid]         decimal(10,3)  NOT NULL 
@@ -121,6 +128,10 @@ go
 
 ALTER TABLE [Shop]
 	ADD CONSTRAINT [XPKShop] PRIMARY KEY  CLUSTERED ([IdShop] ASC)
+go
+
+ALTER TABLE [SimulationTime]
+	ADD CONSTRAINT [XPKSimulationTime] PRIMARY KEY  CLUSTERED ([Id] ASC)
 go
 
 ALTER TABLE [Transaction]

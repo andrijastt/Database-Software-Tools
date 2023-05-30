@@ -83,12 +83,13 @@ public class sa190222_CityOperations implements CityOperations {
             while(rs.next()){
                 ret.add(rs.getInt(1));
             }
+            return ret;  
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return ret;        
+        return null;        
     }
 
     @Override
