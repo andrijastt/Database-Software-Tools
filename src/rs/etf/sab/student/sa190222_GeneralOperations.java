@@ -34,9 +34,11 @@ public class sa190222_GeneralOperations implements GeneralOperations {
     @Override
     public void eraseAll() {            // porveriti da li mora manualno da se radi?
         Connection conn = DB.getInstance().getConnection();
-        String query = "EXEC sys.sp_msforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL' \n"
-                + "EXEC sys.sp_msforeachtable 'DELETE FROM ?'\n"
-                + "EXEC sys.sp_MSForEachTable 'ALTER TABLE ? CHECK CONSTRAINT ALL' ";
+        String query = "exec sp_MSForEachTable 'DISABLE TRIGGER ALL ON ?'\n" +
+        "exec sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'\n" +
+        "exec sp_MSForEachTable 'SET QUOTED_IDENTIFIER ON; DELETE FROM ?'\n" +
+        "exec sp_MSForEachTable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'\n" +
+        "exec sp_MSForEachTable 'ENABLE TRIGGER ALL ON ?'";
         try (PreparedStatement ps = conn.prepareStatement(query);) {
             ps.execute();
         } catch (SQLException ex) {

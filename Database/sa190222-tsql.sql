@@ -1,3 +1,6 @@
+USE ProdavnicaArtikala
+GO
+
 CREATE PROCEDURE SP_FINAL_PRICE
 	@idOrder int
 AS

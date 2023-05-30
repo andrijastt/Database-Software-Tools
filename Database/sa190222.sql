@@ -32,9 +32,9 @@ go
 
 CREATE TABLE [Item]
 ( 
-	[IdArticle]          integer  NULL ,
+	[IdArticle]          integer  NOT NULL ,
 	[Count]              integer  NOT NULL ,
-	[IdOrder]            integer  NULL ,
+	[IdOrder]            integer  NOT NULL ,
 	[IdItem]             integer  IDENTITY  NOT NULL 
 )
 go
@@ -42,7 +42,7 @@ go
 CREATE TABLE [Line]
 ( 
 	[IdCity2]            integer  NOT NULL ,
-	[IdCity1]            integer  NULL ,
+	[IdCity1]            integer  NOT NULL ,
 	[Distance]           integer  NOT NULL 
 	CONSTRAINT [Default_Value_339_742414176]
 		 DEFAULT  1,
@@ -82,9 +82,9 @@ CREATE TABLE [Transaction]
 	[AmountPaid]         decimal(10,3)  NOT NULL 
 	CONSTRAINT [ZERO_1565478598]
 		 DEFAULT  0,
-	[IdOrder]            integer  NULL ,
-	[IdShop]             integer  NULL ,
-	[IdBuyer]            integer  NULL ,
+	[IdOrder]            integer  NOT NULL ,
+	[IdShop]             integer  NOT NULL ,
+	[IdBuyer]            integer  NOT NULL ,
 	[ExecutionTime]      datetime  NULL ,
 	[SystemCut]          integer  NOT NULL 
 	CONSTRAINT [FIVE_1581478741]
@@ -108,11 +108,11 @@ ALTER TABLE [City]
 go
 
 ALTER TABLE [Item]
-	ADD CONSTRAINT [XPKItem] PRIMARY KEY  CLUSTERED ([IdItem] ASC)
+	ADD CONSTRAINT [XPKItem] PRIMARY KEY  CLUSTERED ([IdItem] ASC,[IdArticle] ASC,[IdOrder] ASC)
 go
 
 ALTER TABLE [Line]
-	ADD CONSTRAINT [XPKLine] PRIMARY KEY  CLUSTERED ([IdLine] ASC)
+	ADD CONSTRAINT [XPKLine] PRIMARY KEY  CLUSTERED ([IdLine] ASC,[IdCity1] ASC,[IdCity2] ASC)
 go
 
 ALTER TABLE [Order]
@@ -124,80 +124,77 @@ ALTER TABLE [Shop]
 go
 
 ALTER TABLE [Transaction]
-	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdTransaction] ASC)
+	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdTransaction] ASC,[IdShop] ASC,[IdOrder] ASC,[IdBuyer] ASC)
 go
 
 
 ALTER TABLE [Article]
 	ADD CONSTRAINT [R_1] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Buyer]
 	ADD CONSTRAINT [R_2] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Item]
 	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdArticle]) REFERENCES [Article]([IdArticle])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 ALTER TABLE [Item]
 	ADD CONSTRAINT [R_15] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Line]
 	ADD CONSTRAINT [R_9] FOREIGN KEY ([IdCity2]) REFERENCES [City]([IdCity])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 ALTER TABLE [Line]
 	ADD CONSTRAINT [R_10] FOREIGN KEY ([IdCity1]) REFERENCES [City]([IdCity])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Order]
 	ADD CONSTRAINT [R_3] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Shop]
 	ADD CONSTRAINT [R_12] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_11] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_16] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 ALTER TABLE [Transaction]
 	ADD CONSTRAINT [R_17] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 go
 
 
@@ -272,8 +269,8 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Article  Item on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="00026ade", PARENT_OWNER="", PARENT_TABLE="Article"
+  /* Article  Item on parent update cascade */
+  /* ERWIN_RELATION:CHECKSUM="0002c103", PARENT_OWNER="", PARENT_TABLE="Article"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_14", FK_COLUMNS="IdArticle" */
@@ -281,15 +278,23 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdArticle)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Item
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdArticle = inserted.IdArticle
+        FROM inserted
+      UPDATE Item
+      SET
+        /*  %JoinFKPK(Item,@ins," = ",",") */
+        Item.IdArticle = @insIdArticle
+      FROM Item,inserted,deleted
       WHERE
         /*  %JoinFKPK(Item,deleted," = "," AND") */
         Item.IdArticle = deleted.IdArticle
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Article because Item exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Article update because more than one row has been affected.'
       GOTO error
     END
   END
@@ -345,20 +350,8 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Buyer  Transaction on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="00028c52", PARENT_OWNER="", PARENT_TABLE="Buyer"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
-    DELETE Transaction
-      FROM Transaction,deleted
-      WHERE
-        /*  %JoinFKPK(Transaction,deleted," = "," AND") */
-        Transaction.IdBuyer = deleted.IdBuyer
-
-    /* erwin Builtin Trigger */
     /* Buyer  Order on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
+    /* ERWIN_RELATION:CHECKSUM="0001d686", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Order"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_3", FK_COLUMNS="IdBuyer" */
@@ -419,8 +412,8 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Buyer  Transaction on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="00037356", PARENT_OWNER="", PARENT_TABLE="Buyer"
+  /* Buyer  Transaction on parent update cascade */
+  /* ERWIN_RELATION:CHECKSUM="00041133", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
@@ -428,21 +421,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdBuyer)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdBuyer = inserted.IdBuyer
+        FROM inserted
+      UPDATE Transaction
+      SET
+        /*  %JoinFKPK(Transaction,@ins," = ",",") */
+        Transaction.IdBuyer = @insIdBuyer
+      FROM Transaction,inserted,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdBuyer = deleted.IdBuyer
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Buyer because Transaction exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Buyer update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* Buyer  Order on parent update no action */
+  /* Buyer  Order on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Order"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -451,15 +452,23 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdBuyer)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Order
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdBuyer = inserted.IdBuyer
+        FROM inserted
+      UPDATE Order
+      SET
+        /*  %JoinFKPK(Order,@ins," = ",",") */
+        Order.IdBuyer = @insIdBuyer
+      FROM Order,inserted,deleted
       WHERE
         /*  %JoinFKPK(Order,deleted," = "," AND") */
         Order.IdBuyer = deleted.IdBuyer
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Buyer because Order exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Buyer update because more than one row has been affected.'
       GOTO error
     END
   END
@@ -590,8 +599,8 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* City  Shop on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003d04e", PARENT_OWNER="", PARENT_TABLE="City"
+  /* City  Shop on parent update cascade */
+  /* ERWIN_RELATION:CHECKSUM="0004fc60", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Shop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_12", FK_COLUMNS="IdCity" */
@@ -599,21 +608,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdCity)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Shop
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdCity = inserted.IdCity
+        FROM inserted
+      UPDATE Shop
+      SET
+        /*  %JoinFKPK(Shop,@ins," = ",",") */
+        Shop.IdCity = @insIdCity
+      FROM Shop,inserted,deleted
       WHERE
         /*  %JoinFKPK(Shop,deleted," = "," AND") */
         Shop.IdCity = deleted.IdCity
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update City because Shop exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade City update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* City  Line on parent update no action */
+  /* City  Line on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -622,21 +639,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdCity)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Line
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdCity = inserted.IdCity
+        FROM inserted
+      UPDATE Line
+      SET
+        /*  %JoinFKPK(Line,@ins," = ",",") */
+        Line.IdCity1 = @insIdCity
+      FROM Line,inserted,deleted
       WHERE
         /*  %JoinFKPK(Line,deleted," = "," AND") */
         Line.IdCity1 = deleted.IdCity
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update City because Line exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade City update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* City  Line on parent update no action */
+  /* City  Line on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -645,21 +670,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdCity)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Line
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdCity = inserted.IdCity
+        FROM inserted
+      UPDATE Line
+      SET
+        /*  %JoinFKPK(Line,@ins," = ",",") */
+        Line.IdCity2 = @insIdCity
+      FROM Line,inserted,deleted
       WHERE
         /*  %JoinFKPK(Line,deleted," = "," AND") */
         Line.IdCity2 = deleted.IdCity
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update City because Line exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade City update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* City  Buyer on parent update no action */
+  /* City  Buyer on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Buyer"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -668,15 +701,23 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdCity)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Buyer
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdCity = inserted.IdCity
+        FROM inserted
+      UPDATE Buyer
+      SET
+        /*  %JoinFKPK(Buyer,@ins," = ",",") */
+        Buyer.IdCity = @insIdCity
+      FROM Buyer,inserted,deleted
       WHERE
         /*  %JoinFKPK(Buyer,deleted," = "," AND") */
         Buyer.IdCity = deleted.IdCity
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update City because Buyer exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade City update because more than one row has been affected.'
       GOTO error
     END
   END
@@ -770,6 +811,8 @@ BEGIN
   DECLARE  @numrows int,
            @nullcnt int,
            @validcnt int,
+           @insIdArticle integer, 
+           @insIdOrder integer, 
            @insIdItem integer,
            @errno   int,
            @severity int,
@@ -779,7 +822,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Order  Item on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0002db8a", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* ERWIN_RELATION:CHECKSUM="000289c4", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -794,8 +837,7 @@ BEGIN
           /* %JoinFKPK(inserted,Order) */
           inserted.IdOrder = Order.IdOrder
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdOrder IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -821,8 +863,7 @@ BEGIN
           /* %JoinFKPK(inserted,Article) */
           inserted.IdArticle = Article.IdArticle
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdArticle IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -920,6 +961,8 @@ BEGIN
   DECLARE  @numrows int,
            @nullcnt int,
            @validcnt int,
+           @insIdCity2 integer, 
+           @insIdCity1 integer, 
            @insIdLine integer,
            @errno   int,
            @severity int,
@@ -929,7 +972,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* City  Line on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="00029fe3", PARENT_OWNER="", PARENT_TABLE="City"
+  /* ERWIN_RELATION:CHECKSUM="000276af", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Line"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_10", FK_COLUMNS="IdCity1" */
@@ -944,8 +987,7 @@ BEGIN
           /* %JoinFKPK(inserted,City) */
           inserted.IdCity1 = City.IdCity
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdCity1 IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1004,32 +1046,8 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Order  Item on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="0002a0d3", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Item"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
-    DELETE Item
-      FROM Item,deleted
-      WHERE
-        /*  %JoinFKPK(Item,deleted," = "," AND") */
-        Item.IdOrder = deleted.IdOrder
-
-    /* erwin Builtin Trigger */
-    /* Order  Transaction on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_11", FK_COLUMNS="IdOrder" */
-    DELETE Transaction
-      FROM Transaction,deleted
-      WHERE
-        /*  %JoinFKPK(Transaction,deleted," = "," AND") */
-        Transaction.IdOrder = deleted.IdOrder
-
-    /* erwin Builtin Trigger */
     /* Buyer  Order on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
+    /* ERWIN_RELATION:CHECKSUM="00013927", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Order"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_3", FK_COLUMNS="IdBuyer" */
@@ -1078,8 +1096,8 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Order  Item on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="00036f82", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* Order  Item on parent update cascade */
+  /* ERWIN_RELATION:CHECKSUM="00041caf", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -1087,21 +1105,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdOrder)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Item
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdOrder = inserted.IdOrder
+        FROM inserted
+      UPDATE Item
+      SET
+        /*  %JoinFKPK(Item,@ins," = ",",") */
+        Item.IdOrder = @insIdOrder
+      FROM Item,inserted,deleted
       WHERE
         /*  %JoinFKPK(Item,deleted," = "," AND") */
         Item.IdOrder = deleted.IdOrder
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Order because Item exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Order update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* Order  Transaction on parent update no action */
+  /* Order  Transaction on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -1110,15 +1136,23 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdOrder)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdOrder = inserted.IdOrder
+        FROM inserted
+      UPDATE Transaction
+      SET
+        /*  %JoinFKPK(Transaction,@ins," = ",",") */
+        Transaction.IdOrder = @insIdOrder
+      FROM Transaction,inserted,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdOrder = deleted.IdOrder
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Order because Transaction exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Order update because more than one row has been affected.'
       GOTO error
     END
   END
@@ -1248,8 +1282,8 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Shop  Transaction on parent update no action */
-  /* ERWIN_RELATION:CHECKSUM="000361e0", PARENT_OWNER="", PARENT_TABLE="Shop"
+  /* Shop  Transaction on parent update cascade */
+  /* ERWIN_RELATION:CHECKSUM="00041d9e", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
@@ -1257,21 +1291,29 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdShop)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Transaction
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdShop = inserted.IdShop
+        FROM inserted
+      UPDATE Transaction
+      SET
+        /*  %JoinFKPK(Transaction,@ins," = ",",") */
+        Transaction.IdShop = @insIdShop
+      FROM Transaction,inserted,deleted
       WHERE
         /*  %JoinFKPK(Transaction,deleted," = "," AND") */
         Transaction.IdShop = deleted.IdShop
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Shop because Transaction exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Shop update because more than one row has been affected.'
       GOTO error
     END
   END
 
   /* erwin Builtin Trigger */
-  /* Shop  Article on parent update no action */
+  /* Shop  Article on parent update cascade */
   /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
     CHILD_OWNER="", CHILD_TABLE="Article"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
@@ -1280,15 +1322,23 @@ BEGIN
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdShop)
   BEGIN
-    IF EXISTS (
-      SELECT * FROM deleted,Article
+    IF @numrows = 1
+    BEGIN
+      SELECT @insIdShop = inserted.IdShop
+        FROM inserted
+      UPDATE Article
+      SET
+        /*  %JoinFKPK(Article,@ins," = ",",") */
+        Article.IdShop = @insIdShop
+      FROM Article,inserted,deleted
       WHERE
         /*  %JoinFKPK(Article,deleted," = "," AND") */
         Article.IdShop = deleted.IdShop
-    )
+    END
+    ELSE
     BEGIN
-      SELECT @errno  = 30005,
-             @errmsg = 'Cannot update Shop because Article exists.'
+      SELECT @errno = 30006,
+             @errmsg = 'Cannot cascade Shop update because more than one row has been affected.'
       GOTO error
     END
   END
@@ -1432,6 +1482,9 @@ BEGIN
   DECLARE  @numrows int,
            @nullcnt int,
            @validcnt int,
+           @insIdOrder integer, 
+           @insIdShop integer, 
+           @insIdBuyer integer, 
            @insIdTransaction integer,
            @errno   int,
            @severity int,
@@ -1441,7 +1494,7 @@ BEGIN
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
   /* Buyer  Transaction on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="000440a1", PARENT_OWNER="", PARENT_TABLE="Buyer"
+  /* ERWIN_RELATION:CHECKSUM="0003d024", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
@@ -1456,8 +1509,7 @@ BEGIN
           /* %JoinFKPK(inserted,Buyer) */
           inserted.IdBuyer = Buyer.IdBuyer
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdBuyer IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1483,8 +1535,7 @@ BEGIN
           /* %JoinFKPK(inserted,Shop) */
           inserted.IdShop = Shop.IdShop
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdShop IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
@@ -1510,8 +1561,7 @@ BEGIN
           /* %JoinFKPK(inserted,Order) */
           inserted.IdOrder = Order.IdOrder
     /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    select @nullcnt = count(*) from inserted where
-      inserted.IdOrder IS NULL
+    
     IF @validcnt + @nullcnt != @numrows
     BEGIN
       SELECT @errno  = 30007,
