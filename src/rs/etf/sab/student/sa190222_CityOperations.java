@@ -33,8 +33,7 @@ public class sa190222_CityOperations implements CityOperations {
             ps.setString(1, name);            
             try (ResultSet rs = ps.executeQuery();){
                 
-                if(!rs.next()){
-                    
+                if(!rs.next()){                    
                     String insertSQL = "insert into City(Name) values(?)";
                     try (PreparedStatement psInsert = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS);){
                         psInsert.setString(1, name);            
@@ -53,7 +52,7 @@ public class sa190222_CityOperations implements CityOperations {
                         Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
-                }
+                } 
                 
             } catch (SQLException ex) {
                 Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
@@ -167,20 +166,25 @@ public class sa190222_CityOperations implements CityOperations {
     }
 
     @Override
-    public List<Integer> getConnectedCities(int i) {
+    public List<Integer> getConnectedCities(int idCity) {
         ArrayList<Integer> ret = new ArrayList<>();
         Connection conn = DB.getInstance().getConnection();
         
-        String query = "Select IdLine from Line where IdCity1 = ? or IdCity2 = ?";
+        String query = "Select IdCity1, IdCity2 from Line where IdCity1 = ? or IdCity2 = ?";
         try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             
-            ps.setInt(1, i);
-            ps.setInt(2, i);
+            ps.setInt(1, idCity);
+            ps.setInt(2, idCity);
             
             try(ResultSet rs = ps.executeQuery()){
                 while(rs.next()){
-                    ret.add(rs.getInt(1));
+                    
+                    if(rs.getInt(1) == idCity)                    
+                        ret.add(rs.getInt(2));
+                    else
+                        ret.add(rs.getInt(1));
                 }
+                return ret;
             } catch (SQLException ex) {
                 Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
             }            
@@ -189,7 +193,7 @@ public class sa190222_CityOperations implements CityOperations {
             Logger.getLogger(sa190222_CityOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return ret;
+        return null;
     }
 
     @Override
@@ -217,5 +221,4 @@ public class sa190222_CityOperations implements CityOperations {
         
         return null;
     }
-        
 }

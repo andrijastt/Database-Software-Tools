@@ -125,7 +125,7 @@ public class sa190222_OrderOperations implements OrderOperations {
     @Override
     public int completeOrder(int orderId) {
         
-//        Connection conn = DB.getInstance().getConnection();        
+        Connection conn = DB.getInstance().getConnection();        
 //        BigDecimal price = getFinalPrice(orderId);
 //        
 //        String query = "Select B.*\n" +
