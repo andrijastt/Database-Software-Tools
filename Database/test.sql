@@ -54,5 +54,6 @@ select * from Article
 select * from [Order]
 select * from Item
 select * from [Transaction]
+select * from [TransactionShop]
 select * from SimulationTime
 select * from Tracking

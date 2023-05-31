@@ -38,7 +38,7 @@ public class sa190222_GeneralOperations implements GeneralOperations {
     public Calendar time(int days) {
         
         Connection conn = DB.getInstance().getConnection();
-        String query = "Update SimulationTime set Time = Time + ? where Id = 1";
+        String query = "Update SimulationTime set Time = DateAdd(day, ?, Time) where Id = 1";
         
         try(PreparedStatement ps = conn.prepareStatement(query);) {                        
             
@@ -105,7 +105,7 @@ public class sa190222_GeneralOperations implements GeneralOperations {
     public static void main(String[] args) {
 //        Calendar cal = Calendar.getInstance();        
 //        cal.set(2023, 4, 15);
-        new sa190222_GeneralOperations().time(22);
+        new sa190222_GeneralOperations().time(9);
     }
     
 }

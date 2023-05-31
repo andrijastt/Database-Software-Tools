@@ -241,14 +241,15 @@ public class sa190222_OrderOperations implements OrderOperations {
                     
                     String insertTrackingQuery = "Insert into Tracking(IdOrder, StartDate, IdCity) values (?, Dateadd(DAY, ?, ?), ?)";
                     
+                    startDate -= node.getDistance();
+                    
                     PreparedStatement psTracking = conn.prepareStatement(insertTrackingQuery);
                     psTracking.setInt(1, idOrder);
                     psTracking.setInt(2,startDate);
                     psTracking.setDate(3, sqlDate);
                     psTracking.setInt(4,node.getName());
                     psTracking.executeUpdate();
-                    
-                    startDate -= node.getDistance();
+                                        
                 }
                 
                 String updateOrderQuery = "UPDATE [Order] set status = 'sent', TravelTime = ?, SentTime = ?, CurrentCity = ? where IdOrder = ?";

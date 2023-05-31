@@ -36,10 +36,10 @@ BEGIN
 	Select StartDate, IdCity
 	from Tracking
 	where IdOrder = @idOrder
+	order by StartDate ASC
 
 	open @cursorTracking
-	fetch next from @cursorTracking into @startDate, @idCity
-
+	
 	while @@FETCH_STATUS = 0
 	begin
 		if(DATEDIFF(day, @sentTime, @date) >= @travelTime)
@@ -56,7 +56,8 @@ BEGIN
 			where IdOrder = @idOrder
 		end
 		else
-		begin												
+		begin							
+			fetch next from @cursorTracking into @startDate, @idCity
 			while @@FETCH_STATUS = 0
 			begin			
 				if(DATEDIFF(day, @startDate, @date) >= 0)

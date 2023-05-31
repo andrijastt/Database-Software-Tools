@@ -45,7 +45,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getShopTransactionsAmmount(int idShop) {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select Sum(AmountPaid) from [Transaction] where IdShop = ?";
+        String query = "Select Sum(AmountPaid) from [TransactionShop] where IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idShop);
@@ -110,7 +110,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     @Override
     public int getTransactionForShopAndOrder(int idOrder, int idShop) {
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select IdTransaction from [Transaction] where IdOrder = ? and IdShop = ?";
+        String query = "Select IdTransaction from [TransactionShop] where IdOrder = ? and IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idOrder);
@@ -132,7 +132,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         ArrayList<Integer> ret = new ArrayList<>();
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select IdTransaction from [Transaction] where IdShop = ?";
+        String query = "Select IdTransaction from [TransactionShop] where IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idShop);
@@ -178,7 +178,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getAmmountThatBuyerPayedForOrder(int idOrder) {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select AmountPaid from [Transaction] where IdOrder = ?";
+        String query = "Select Sum(AmountPaid) from [Transaction] where IdOrder = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);){                        
             ps.setInt(1, idOrder);
             try(ResultSet rs = ps.executeQuery();){                
@@ -195,7 +195,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getAmmountThatShopRecievedForOrder(int idShop, int idOrder) {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select (AmountPaid * (100 - SystemCut) / 100) from [Transaction] where IdShop = ? and IdOrder = ?";
+        String query = "Select Sum(AmountPaid * (100 - SystemCut) / 100) from [TransactionShop] where IdShop = ? and IdOrder = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);){
             
             ps.setInt(1, idShop);
@@ -246,5 +246,5 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         
         return new BigDecimal(0);
     }
-    
+           
 }

@@ -100,7 +100,6 @@ CREATE TABLE [Transaction]
 	CONSTRAINT [ZERO_1565478598]
 		 DEFAULT  0,
 	[IdOrder]            integer  NOT NULL ,
-	[IdShop]             integer  NOT NULL ,
 	[IdBuyer]            integer  NOT NULL ,
 	[ExecutionTime]      datetime  NULL ,
 	[SystemCut]          integer  NOT NULL 
@@ -109,6 +108,15 @@ CREATE TABLE [Transaction]
 	CONSTRAINT [Three_or_Five_141057686]
 		CHECK  ( SystemCut BETWEEN 3 AND 5 ),
 	[IdTransaction]      integer  IDENTITY  NOT NULL 
+)
+go
+
+CREATE TABLE [TransactionShop]
+( 
+	[IdShop]             integer  NOT NULL ,
+	[IdTransaction]      integer  NOT NULL ,
+	[AmountPaid]         decimal(10,3)  NOT NULL ,
+	[IdOrder]            integer  NOT NULL 
 )
 go
 
@@ -149,7 +157,11 @@ ALTER TABLE [Tracking]
 go
 
 ALTER TABLE [Transaction]
-	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdTransaction] ASC,[IdShop] ASC,[IdOrder] ASC,[IdBuyer] ASC)
+	ADD CONSTRAINT [XPKTransaction] PRIMARY KEY  CLUSTERED ([IdTransaction] ASC,[IdOrder] ASC)
+go
+
+ALTER TABLE [TransactionShop]
+	ADD CONSTRAINT [XPKTransactionShop] PRIMARY KEY  CLUSTERED ([IdShop] ASC,[IdTransaction] ASC,[IdOrder] ASC)
 go
 
 
@@ -225,14 +237,21 @@ ALTER TABLE [Transaction]
 go
 
 ALTER TABLE [Transaction]
-	ADD CONSTRAINT [R_16] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
-		ON DELETE CASCADE
+	ADD CONSTRAINT [R_17] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
 		ON UPDATE CASCADE
 go
 
-ALTER TABLE [Transaction]
-	ADD CONSTRAINT [R_17] FOREIGN KEY ([IdBuyer]) REFERENCES [Buyer]([IdBuyer])
-		ON UPDATE CASCADE
+
+ALTER TABLE [TransactionShop]
+	ADD CONSTRAINT [R_21] FOREIGN KEY ([IdShop]) REFERENCES [Shop]([IdShop])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [TransactionShop]
+	ADD CONSTRAINT [R_22] FOREIGN KEY ([IdTransaction],[IdOrder]) REFERENCES [Transaction]([IdTransaction],[IdOrder])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
 go
 
 
@@ -1328,16 +1347,22 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
-    /* Shop  Transaction on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="000297a4", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
+    /* Shop  TransactionShop on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="0002d12c", PARENT_OWNER="", PARENT_TABLE="Shop"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
-    DELETE Transaction
-      FROM Transaction,deleted
+    FK_CONSTRAINT="R_21", FK_COLUMNS="IdShop" */
+    IF EXISTS (
+      SELECT * FROM deleted,TransactionShop
       WHERE
-        /*  %JoinFKPK(Transaction,deleted," = "," AND") */
-        Transaction.IdShop = deleted.IdShop
+        /*  %JoinFKPK(TransactionShop,deleted," = "," AND") */
+        TransactionShop.IdShop = deleted.IdShop
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete Shop because TransactionShop exists.'
+      GOTO error
+    END
 
     /* erwin Builtin Trigger */
     /* Shop  Article on parent delete cascade */
@@ -1402,32 +1427,24 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
-  /* Shop  Transaction on parent update cascade */
-  /* ERWIN_RELATION:CHECKSUM="00041d9e", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
+  /* Shop  TransactionShop on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="0003b58c", PARENT_OWNER="", PARENT_TABLE="Shop"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
+    FK_CONSTRAINT="R_21", FK_COLUMNS="IdShop" */
   IF
     /* %ParentPK(" OR",UPDATE) */
     UPDATE(IdShop)
   BEGIN
-    IF @numrows = 1
-    BEGIN
-      SELECT @insIdShop = inserted.IdShop
-        FROM inserted
-      UPDATE Transaction
-      SET
-        /*  %JoinFKPK(Transaction,@ins," = ",",") */
-        Transaction.IdShop = @insIdShop
-      FROM Transaction,inserted,deleted
+    IF EXISTS (
+      SELECT * FROM deleted,TransactionShop
       WHERE
-        /*  %JoinFKPK(Transaction,deleted," = "," AND") */
-        Transaction.IdShop = deleted.IdShop
-    END
-    ELSE
+        /*  %JoinFKPK(TransactionShop,deleted," = "," AND") */
+        TransactionShop.IdShop = deleted.IdShop
+    )
     BEGIN
-      SELECT @errno = 30006,
-             @errmsg = 'Cannot cascade Shop update because more than one row has been affected.'
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update Shop because TransactionShop exists.'
       GOTO error
     END
   END
@@ -1664,8 +1681,27 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
+    /* Transaction  TransactionShop on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00036ce6", PARENT_OWNER="", PARENT_TABLE="Transaction"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_22", FK_COLUMNS="IdTransaction""IdOrder" */
+    IF EXISTS (
+      SELECT * FROM deleted,TransactionShop
+      WHERE
+        /*  %JoinFKPK(TransactionShop,deleted," = "," AND") */
+        TransactionShop.IdOrder = deleted.IdOrder AND
+        TransactionShop.IdTransaction = deleted.IdTransaction
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete Transaction because TransactionShop exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
     /* Buyer  Transaction on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00036b08", PARENT_OWNER="", PARENT_TABLE="Buyer"
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
@@ -1683,29 +1719,6 @@ BEGIN
     BEGIN
       SELECT @errno  = 30010,
              @errmsg = 'Cannot delete last Transaction because Buyer exists.'
-      GOTO error
-    END
-
-    /* erwin Builtin Trigger */
-    /* Shop  Transaction on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
-    IF EXISTS (SELECT * FROM deleted,Shop
-      WHERE
-        /* %JoinFKPK(deleted,Shop," = "," AND") */
-        deleted.IdShop = Shop.IdShop AND
-        NOT EXISTS (
-          SELECT * FROM Transaction
-          WHERE
-            /* %JoinFKPK(Transaction,Shop," = "," AND") */
-            Transaction.IdShop = Shop.IdShop
-        )
-    )
-    BEGIN
-      SELECT @errno  = 30010,
-             @errmsg = 'Cannot delete last Transaction because Shop exists.'
       GOTO error
     END
 
@@ -1753,8 +1766,6 @@ BEGIN
            @nullcnt int,
            @validcnt int,
            @insIdOrder integer, 
-           @insIdShop integer, 
-           @insIdBuyer integer, 
            @insIdTransaction integer,
            @errno   int,
            @severity int,
@@ -1763,8 +1774,33 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
+  /* Transaction  TransactionShop on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="0003e46a", PARENT_OWNER="", PARENT_TABLE="Transaction"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_22", FK_COLUMNS="IdTransaction""IdOrder" */
+  IF
+    /* %ParentPK(" OR",UPDATE) */
+    UPDATE(IdOrder) OR
+    UPDATE(IdTransaction)
+  BEGIN
+    IF EXISTS (
+      SELECT * FROM deleted,TransactionShop
+      WHERE
+        /*  %JoinFKPK(TransactionShop,deleted," = "," AND") */
+        TransactionShop.IdOrder = deleted.IdOrder AND
+        TransactionShop.IdTransaction = deleted.IdTransaction
+    )
+    BEGIN
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update Transaction because TransactionShop exists.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
   /* Buyer  Transaction on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="0003d024", PARENT_OWNER="", PARENT_TABLE="Buyer"
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Transaction"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_17", FK_COLUMNS="IdBuyer" */
@@ -1784,32 +1820,6 @@ BEGIN
     BEGIN
       SELECT @errno  = 30007,
              @errmsg = 'Cannot update Transaction because Buyer does not exist.'
-      GOTO error
-    END
-  END
-
-  /* erwin Builtin Trigger */
-  /* Shop  Transaction on child update no action */
-  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
-    CHILD_OWNER="", CHILD_TABLE="Transaction"
-    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
-    FK_CONSTRAINT="R_16", FK_COLUMNS="IdShop" */
-  IF
-    /* %ChildFK(" OR",UPDATE) */
-    UPDATE(IdShop)
-  BEGIN
-    SELECT @nullcnt = 0
-    SELECT @validcnt = count(*)
-      FROM inserted,Shop
-        WHERE
-          /* %JoinFKPK(inserted,Shop) */
-          inserted.IdShop = Shop.IdShop
-    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
-    
-    IF @validcnt + @nullcnt != @numrows
-    BEGIN
-      SELECT @errno  = 30007,
-             @errmsg = 'Cannot update Transaction because Shop does not exist.'
       GOTO error
     END
   END
@@ -1836,6 +1846,160 @@ BEGIN
     BEGIN
       SELECT @errno  = 30007,
              @errmsg = 'Cannot update Transaction because Order does not exist.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tD_TransactionShop ON TransactionShop FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on TransactionShop */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* Transaction  TransactionShop on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="0002ca58", PARENT_OWNER="", PARENT_TABLE="Transaction"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_22", FK_COLUMNS="IdTransaction""IdOrder" */
+    IF EXISTS (SELECT * FROM deleted,Transaction
+      WHERE
+        /* %JoinFKPK(deleted,Transaction," = "," AND") */
+        deleted.IdOrder = Transaction.IdOrder AND
+        deleted.IdTransaction = Transaction.IdTransaction AND
+        NOT EXISTS (
+          SELECT * FROM TransactionShop
+          WHERE
+            /* %JoinFKPK(TransactionShop,Transaction," = "," AND") */
+            TransactionShop.IdOrder = Transaction.IdOrder AND
+            TransactionShop.IdTransaction = Transaction.IdTransaction
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last TransactionShop because Transaction exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
+    /* Shop  TransactionShop on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_21", FK_COLUMNS="IdShop" */
+    IF EXISTS (SELECT * FROM deleted,Shop
+      WHERE
+        /* %JoinFKPK(deleted,Shop," = "," AND") */
+        deleted.IdShop = Shop.IdShop AND
+        NOT EXISTS (
+          SELECT * FROM TransactionShop
+          WHERE
+            /* %JoinFKPK(TransactionShop,Shop," = "," AND") */
+            TransactionShop.IdShop = Shop.IdShop
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last TransactionShop because Shop exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+CREATE TRIGGER tU_TransactionShop ON TransactionShop FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on TransactionShop */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insIdShop integer, 
+           @insIdTransaction integer, 
+           @insIdOrder integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* Transaction  TransactionShop on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="0002ed0e", PARENT_OWNER="", PARENT_TABLE="Transaction"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_22", FK_COLUMNS="IdTransaction""IdOrder" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdOrder) OR
+    UPDATE(IdTransaction)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Transaction
+        WHERE
+          /* %JoinFKPK(inserted,Transaction) */
+          inserted.IdOrder = Transaction.IdOrder and
+          inserted.IdTransaction = Transaction.IdTransaction
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update TransactionShop because Transaction does not exist.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
+  /* Shop  TransactionShop on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Shop"
+    CHILD_OWNER="", CHILD_TABLE="TransactionShop"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_21", FK_COLUMNS="IdShop" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdShop)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Shop
+        WHERE
+          /* %JoinFKPK(inserted,Shop) */
+          inserted.IdShop = Shop.IdShop
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update TransactionShop because Shop does not exist.'
       GOTO error
     END
   END

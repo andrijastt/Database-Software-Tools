@@ -5,6 +5,7 @@ CREATE TRIGGER TR_TRANSFER_MONEY
    ON  [Order]
    AFTER UPDATE
 AS 
+if (update(status))
 BEGIN
 		
 	declare @idOrder int
@@ -55,15 +56,27 @@ BEGIN
 	open @cursor
 	fetch next from @cursor into @count, @idShop, @discount, @price, @idCity, @idArticle
 
-	while @@FETCH_STATUS = 0
-		begin	
+	Select @amountToPay = sum(I.[Count] * A.Price * (100 - S.Discount) / 100)			-- here we calculate how much is the transaction for buyer
+	from Article A join Item I on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
+	where I.IdOrder = @idOrder -- and S.IdShop = @idShop
+	
+	Insert into [Transaction](IdOrder, IdBuyer, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for order, buyer
+	values(@idOrder, @idBuyer, @amountToPay, @date, @systemCut)
 
-		Select @amountToPay = sum(I.[Count] * A.Price * (100 - S.Discount) / 100)			-- here we calculate how much is the transaction for shops
+	while @@FETCH_STATUS = 0
+		begin				
+
+		Select @amountToPay = sum(I.[Count] * A.Price * (100 - S.Discount) / 100)			-- here we calculate how much is the transaction for shop
 		from Article A join Item I on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
 		where I.IdOrder = @idOrder and S.IdShop = @idShop
-	
-		Insert into [Transaction](IdShop, IdOrder, IdBuyer, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for shop, order, buyer
-		values(@idShop, @idOrder, @idBuyer, @amountToPay, @date, @systemCut)	
+
+		declare @idTransaction int
+		select @idTransaction = IdTransaction
+		from [Transaction]
+		where IdOrder = @idOrder
+
+		Insert into [TransactionShop](IdShop, IdTransaction, IdOrder, AmountPaid)
+		values(@idShop, @idTransaction, @idOrder, (@amountToPay * (100 - @systemCut) / 100))								-- @amountToPay promena
 
 		Update Shop																			-- update shop balance
 		set Balance = Balance + (@amountToPay * (100 - @systemCut) / 100)
