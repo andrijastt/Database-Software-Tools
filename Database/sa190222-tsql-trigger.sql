@@ -127,7 +127,7 @@ BEGIN
 	end
 
 	UPDATE [Order]					-- update Order
-	set Status = 'sent', TravelTime = @shortestPathToBuyer + @longestPathToCity, CurrentCity = @idCityToBuyer
+	set Status = 'sent', TravelTime = @shortestPathToBuyer + @longestPathToCity, CurrentCity = @idCityToBuyer, SentTime = @date
 	where IdOrder = @idOrder
 
 	close @cursor

@@ -103,9 +103,9 @@ public class sa190222_GeneralOperations implements GeneralOperations {
     }
     
     public static void main(String[] args) {
-        Calendar cal = Calendar.getInstance();        
-        cal.set(2023, 4, 15);
-        new sa190222_GeneralOperations().setInitialTime(cal);
+//        Calendar cal = Calendar.getInstance();        
+//        cal.set(2023, 4, 15);
+        new sa190222_GeneralOperations().time(22);
     }
     
 }

@@ -131,20 +131,46 @@ public class sa190222_OrderOperations implements OrderOperations {
         String query = "Select * from Buyer where Wallet > ?"; 
 
         try(PreparedStatement ps = conn.prepareStatement(query);) {
-            ps.setBigDecimal(1, price);
+            ps.setBigDecimal(1, price);                                   
             try(ResultSet rs = ps.executeQuery();){               
                 if(!rs.next()){
                     return  -1;
                 }                                
                 
                 int idBuyer = rs.getInt(1);                
-                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
+                int idBuyerCity = rs.getInt(4);
+//                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
+//                
+//                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
+//                    ps1.setBigDecimal(1, price);
+//                    ps1.setInt(2, idBuyer);                    
+//                    ps1.executeUpdate();                    
+//                }
                 
-                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
-                    ps1.setBigDecimal(1, price);
-                    ps1.setInt(2, idBuyer);                    
-                    ps1.executeUpdate();                    
+                // DIJKSTRA OVDE ili koji vec algoritam budem koristio
+                
+                String cityQuery = "Select IdCity from City";
+                PreparedStatement psCity = conn.prepareStatement(cityQuery);                
+                ResultSet rsCity = psCity.executeQuery();
+                
+                Graph graph = new Graph();
+                
+                while(rsCity.next()){                                        
+                    graph.addNode(new Node(rsCity.getInt(1)));
                 }
+                                                
+                String linesQuery = "Select IdCity1, IdCity2, Distance from Line";
+                PreparedStatement psLines = conn.prepareStatement(linesQuery);
+                
+                ResultSet rsLines = psLines.executeQuery();
+                
+                while(rsLines.next()){                    
+                    Node.connectNodes(Node.allNodes.get(rsLines.getInt(1)), Node.allNodes.get(rsLines.getInt(2)), rsLines.getInt(3));                    
+                }
+                
+                graph = Dijkstra.calculateShortestPathFromSource(graph, Node.allNodes.get(idBuyerCity));
+                
+                
                 
                 String updateOrderQuery = "UPDATE [Order] set status = 'sent' where IdOrder = ?";
                 try(PreparedStatement ps2 = conn.prepareStatement(updateOrderQuery);){                                        
