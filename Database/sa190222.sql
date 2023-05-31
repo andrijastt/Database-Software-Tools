@@ -85,6 +85,15 @@ CREATE TABLE [SimulationTime]
 )
 go
 
+CREATE TABLE [Tracking]
+( 
+	[IdTracking]         integer  IDENTITY  NOT NULL ,
+	[IdOrder]            integer  NOT NULL ,
+	[StartDate]          datetime  NULL ,
+	[IdCity]             integer  NOT NULL 
+)
+go
+
 CREATE TABLE [Transaction]
 ( 
 	[AmountPaid]         decimal(10,3)  NOT NULL 
@@ -133,6 +142,10 @@ go
 
 ALTER TABLE [SimulationTime]
 	ADD CONSTRAINT [XPKSimulationTime] PRIMARY KEY  CLUSTERED ([Id] ASC)
+go
+
+ALTER TABLE [Tracking]
+	ADD CONSTRAINT [XPKTracking] PRIMARY KEY  CLUSTERED ([IdTracking] ASC)
 go
 
 ALTER TABLE [Transaction]
@@ -190,6 +203,19 @@ ALTER TABLE [Shop]
 	ADD CONSTRAINT [R_12] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
+go
+
+
+ALTER TABLE [Tracking]
+	ADD CONSTRAINT [R_19] FOREIGN KEY ([IdOrder]) REFERENCES [Order]([IdOrder])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Tracking]
+	ADD CONSTRAINT [R_20] FOREIGN KEY ([IdCity]) REFERENCES [City]([IdCity])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
 go
 
 
@@ -536,8 +562,26 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
+    /* City  Tracking on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="0003acf4", PARENT_OWNER="", PARENT_TABLE="City"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_20", FK_COLUMNS="IdCity" */
+    IF EXISTS (
+      SELECT * FROM deleted,Tracking
+      WHERE
+        /*  %JoinFKPK(Tracking,deleted," = "," AND") */
+        Tracking.IdCity = deleted.IdCity
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete City because Tracking exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
     /* City  Shop on parent delete cascade */
-    /* ERWIN_RELATION:CHECKSUM="0002c29f", PARENT_OWNER="", PARENT_TABLE="City"
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Shop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_12", FK_COLUMNS="IdCity" */
@@ -611,8 +655,31 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
+  /* City  Tracking on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="000601b6", PARENT_OWNER="", PARENT_TABLE="City"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_20", FK_COLUMNS="IdCity" */
+  IF
+    /* %ParentPK(" OR",UPDATE) */
+    UPDATE(IdCity)
+  BEGIN
+    IF EXISTS (
+      SELECT * FROM deleted,Tracking
+      WHERE
+        /*  %JoinFKPK(Tracking,deleted," = "," AND") */
+        Tracking.IdCity = deleted.IdCity
+    )
+    BEGIN
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update City because Tracking exists.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
   /* City  Shop on parent update cascade */
-  /* ERWIN_RELATION:CHECKSUM="0004fc60", PARENT_OWNER="", PARENT_TABLE="City"
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="City"
     CHILD_OWNER="", CHILD_TABLE="Shop"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_12", FK_COLUMNS="IdCity" */
@@ -1058,8 +1125,26 @@ BEGIN
            @state    int,
            @errmsg  varchar(255)
     /* erwin Builtin Trigger */
+    /* Order  Tracking on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="000205e1", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_19", FK_COLUMNS="IdOrder" */
+    IF EXISTS (
+      SELECT * FROM deleted,Tracking
+      WHERE
+        /*  %JoinFKPK(Tracking,deleted," = "," AND") */
+        Tracking.IdOrder = deleted.IdOrder
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete Order because Tracking exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
     /* Buyer  Order on child delete no action */
-    /* ERWIN_RELATION:CHECKSUM="00013927", PARENT_OWNER="", PARENT_TABLE="Buyer"
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Buyer"
     CHILD_OWNER="", CHILD_TABLE="Order"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_3", FK_COLUMNS="IdBuyer" */
@@ -1108,8 +1193,31 @@ BEGIN
 
   SELECT @numrows = @@rowcount
   /* erwin Builtin Trigger */
+  /* Order  Tracking on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="0004e75a", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_19", FK_COLUMNS="IdOrder" */
+  IF
+    /* %ParentPK(" OR",UPDATE) */
+    UPDATE(IdOrder)
+  BEGIN
+    IF EXISTS (
+      SELECT * FROM deleted,Tracking
+      WHERE
+        /*  %JoinFKPK(Tracking,deleted," = "," AND") */
+        Tracking.IdOrder = deleted.IdOrder
+    )
+    BEGIN
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update Order because Tracking exists.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
   /* Order  Item on parent update cascade */
-  /* ERWIN_RELATION:CHECKSUM="00041caf", PARENT_OWNER="", PARENT_TABLE="Order"
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
     CHILD_OWNER="", CHILD_TABLE="Item"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
     FK_CONSTRAINT="R_15", FK_COLUMNS="IdOrder" */
@@ -1378,6 +1486,156 @@ BEGIN
     BEGIN
       SELECT @errno  = 30007,
              @errmsg = 'Cannot update Shop because City does not exist.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tD_Tracking ON Tracking FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on Tracking */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* City  Tracking on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="000244af", PARENT_OWNER="", PARENT_TABLE="City"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_20", FK_COLUMNS="IdCity" */
+    IF EXISTS (SELECT * FROM deleted,City
+      WHERE
+        /* %JoinFKPK(deleted,City," = "," AND") */
+        deleted.IdCity = City.IdCity AND
+        NOT EXISTS (
+          SELECT * FROM Tracking
+          WHERE
+            /* %JoinFKPK(Tracking,City," = "," AND") */
+            Tracking.IdCity = City.IdCity
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Tracking because City exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
+    /* Order  Tracking on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_19", FK_COLUMNS="IdOrder" */
+    IF EXISTS (SELECT * FROM deleted,Order
+      WHERE
+        /* %JoinFKPK(deleted,Order," = "," AND") */
+        deleted.IdOrder = Order.IdOrder AND
+        NOT EXISTS (
+          SELECT * FROM Tracking
+          WHERE
+            /* %JoinFKPK(Tracking,Order," = "," AND") */
+            Tracking.IdOrder = Order.IdOrder
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Tracking because Order exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+CREATE TRIGGER tU_Tracking ON Tracking FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on Tracking */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insIdTracking integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* City  Tracking on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="0002d2e6", PARENT_OWNER="", PARENT_TABLE="City"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_20", FK_COLUMNS="IdCity" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdCity)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,City
+        WHERE
+          /* %JoinFKPK(inserted,City) */
+          inserted.IdCity = City.IdCity
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    select @nullcnt = count(*) from inserted where
+      inserted.IdCity IS NULL
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Tracking because City does not exist.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
+  /* Order  Tracking on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Order"
+    CHILD_OWNER="", CHILD_TABLE="Tracking"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_19", FK_COLUMNS="IdOrder" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(IdOrder)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Order
+        WHERE
+          /* %JoinFKPK(inserted,Order) */
+          inserted.IdOrder = Order.IdOrder
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    select @nullcnt = count(*) from inserted where
+      inserted.IdOrder IS NULL
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Tracking because Order does not exist.'
       GOTO error
     END
   END

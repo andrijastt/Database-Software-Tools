@@ -43,11 +43,7 @@ BEGIN
 		set @systemCut = 3
 	end
 	else
-		set @systemCut = 5
-
-	declare @shortestPathToBuyer int	-- nearest city from shop to buyer
-	set @shortestPathToBuyer = -1		-- distance in days
-	declare @idCityToBuyer int			-- idCity of the city
+		set @systemCut = 5	
 
 	declare @cursor cursor				-- we use cursor tu select previously declared variables
 
@@ -60,80 +56,31 @@ BEGIN
 	fetch next from @cursor into @count, @idShop, @discount, @price, @idCity, @idArticle
 
 	while @@FETCH_STATUS = 0
-	begin	
+		begin	
 
-	Select @amountToPay = sum(I.[Count] * A.Price * (100 - S.Discount) / 100)			-- here we calculate how much is the transaction for shops
-	from Article A join Item I on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
-	where I.IdOrder = @idOrder and S.IdShop = @idShop
+		Select @amountToPay = sum(I.[Count] * A.Price * (100 - S.Discount) / 100)			-- here we calculate how much is the transaction for shops
+		from Article A join Item I on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
+		where I.IdOrder = @idOrder and S.IdShop = @idShop
 	
-	Insert into [Transaction](IdShop, IdOrder, IdBuyer, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for shop, order, buyer
-	values(@idShop, @idOrder, @idBuyer, @amountToPay, @date, @systemCut)	
+		Insert into [Transaction](IdShop, IdOrder, IdBuyer, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for shop, order, buyer
+		values(@idShop, @idOrder, @idBuyer, @amountToPay, @date, @systemCut)	
 
-	Update Shop																			-- update shop balance
-	set Balance = Balance + (@amountToPay * (100 - @systemCut) / 100)
-	where IdShop = @idShop
+		Update Shop																			-- update shop balance
+		set Balance = Balance + (@amountToPay * (100 - @systemCut) / 100)
+		where IdShop = @idShop
 
-	Update Article
-	set [Count] = [Count] - @count
-	where IdArticle = @idArticle
+		Update Article
+		set [Count] = [Count] - @count
+		where IdArticle = @idArticle		
 
-	declare @distanceToCity int															-- distance from shop to buyer
-
-	if(@idCityBuyer = @idCity)															-- if shop is in the same city as buyer
-	begin
-		set @distanceToCity = 0
+		fetch next from @cursor into @count, @idShop, @discount, @price, @idCity, @idArticle
 	end
-	else																				-- else calculate distance
-	begin
-		select @distanceToCity = distance
-		from dbo.F_SHORTEST_PATH(@idCityBuyer, @idCity)
-	end		
-
-	if(@shortestPathToBuyer = -1 or @distanceToCity < @shortestPathToBuyer)				-- check if distance is lower
-	begin
-		set @shortestPathToBuyer = @distanceToCity
-		set @idCityToBuyer = @idCity
-	end
-
-	fetch next from @cursor into @count, @idShop, @discount, @price, @idCity, @idArticle
-	end
-
-	declare @cursorShop cursor
-
-	set @cursorShop = cursor for		-- get idCity from shops, excludeing nearest city to buyer
-	select S.IdCity
-	from Article A join Item I on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
-	where I.IdOrder = @idOrder and S.IdCity != @idCityToBuyer
-
-	open @cursorShop
-
-	fetch next from @cursorShop into @idCity
-
-	declare @longestPathToCity int
-	set @longestPathToCity = 0	
-
-	while @@FETCH_STATUS = 0
-	begin
-
-		select @distanceToCity = distance
-		from dbo.F_SHORTEST_PATH(@idCityToBuyer, @idCity)
-
-		if(@longestPathToCity < @distanceToCity)		-- if the longestPath is not longest then set longestPath
-		begin
-			set @longestPathToCity = @distanceToCity			
-		end
-
-		fetch next from @cursorShop into @idCity
-	end
-
-	UPDATE [Order]					-- update Order
-	set Status = 'sent', TravelTime = @shortestPathToBuyer + @longestPathToCity, CurrentCity = @idCityToBuyer, SentTime = @date
+		
+	Delete from Item
 	where IdOrder = @idOrder
 
 	close @cursor
 	deallocate @cursor
-	close @cursorShop
-	deallocate @cursorShop
-
+	
 END
 GO

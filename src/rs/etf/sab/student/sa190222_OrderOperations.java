@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,13 +140,13 @@ public class sa190222_OrderOperations implements OrderOperations {
                 
                 int idBuyer = rs.getInt(1);                
                 int idBuyerCity = rs.getInt(4);
-//                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
-//                
-//                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
-//                    ps1.setBigDecimal(1, price);
-//                    ps1.setInt(2, idBuyer);                    
-//                    ps1.executeUpdate();                    
-//                }
+                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
+                
+                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
+                    ps1.setBigDecimal(1, price);
+                    ps1.setInt(2, idBuyer);                    
+                    ps1.executeUpdate();                    
+                }
                 
                 // DIJKSTRA OVDE ili koji vec algoritam budem koristio
                 
@@ -153,8 +154,7 @@ public class sa190222_OrderOperations implements OrderOperations {
                 PreparedStatement psCity = conn.prepareStatement(cityQuery);                
                 ResultSet rsCity = psCity.executeQuery();
                 
-                Graph graph = new Graph();
-                
+                Graph graph = new Graph();                
                 while(rsCity.next()){                                        
                     graph.addNode(new Node(rsCity.getInt(1)));
                 }
@@ -170,11 +170,93 @@ public class sa190222_OrderOperations implements OrderOperations {
                 
                 graph = Dijkstra.calculateShortestPathFromSource(graph, Node.allNodes.get(idBuyerCity));
                 
+                HashSet<Node> nodes = (HashSet<Node>) graph.getNodes();
+               
+                String queryIdCityOrder = "Select IdCity\n" +
+                "from Shop S join Article A on S.IdShop = A.IdShop join Item I on I.IdArticle = A.IdArticle\n" +
+                "where IdOrder = ?";
+                
+                PreparedStatement psIdCityOrder = conn.prepareStatement(queryIdCityOrder);
+                psIdCityOrder.setInt(1, idOrder);
+                
+                ResultSet rsqueryIdCityOrder = psIdCityOrder.executeQuery();
+                
+                int distance = Integer.MAX_VALUE;
+                int cityIdNearestToBuyer = -1;
+                
+                while(rsqueryIdCityOrder.next()){                    
+                    int temp = rsqueryIdCityOrder.getInt(1);                    
+                    Node tempNode = Node.allNodes.get(temp);                    
+                    if(tempNode.getDistance() < distance){                        
+                        distance = tempNode.getDistance();
+                        cityIdNearestToBuyer = tempNode.getName();
+                    }
+                }
+
+                Node neareastCityNode = Node.allNodes.get(cityIdNearestToBuyer);                    
+                
+                Node.allNodes.clear();
+                graph = new Graph();
+                rsCity = psCity.executeQuery();
+                                   
+                while(rsCity.next()){                                        
+                    graph.addNode(new Node(rsCity.getInt(1)));
+                }
+                
+                rsLines = psLines.executeQuery();                                    
+                while(rsLines.next()){                    
+                    Node.connectNodes(Node.allNodes.get(rsLines.getInt(1)), Node.allNodes.get(rsLines.getInt(2)), rsLines.getInt(3));                    
+                }
                 
                 
-                String updateOrderQuery = "UPDATE [Order] set status = 'sent' where IdOrder = ?";
-                try(PreparedStatement ps2 = conn.prepareStatement(updateOrderQuery);){                                        
-                    ps2.setInt(1, idOrder);                    
+                 graph = Dijkstra.calculateShortestPathFromSource(graph, Node.allNodes.get(cityIdNearestToBuyer));
+                
+                queryIdCityOrder = "Select IdCity\n" +
+                "from Shop S join Article A on S.IdShop = A.IdShop join Item I on I.IdArticle = A.IdArticle\n" +
+                "where IdOrder = ? and S.IdShop != ?";
+                
+                psIdCityOrder = conn.prepareStatement(queryIdCityOrder);
+                psIdCityOrder.setInt(1, idOrder);
+                psIdCityOrder.setInt(2, cityIdNearestToBuyer);
+                
+                rsqueryIdCityOrder = psIdCityOrder.executeQuery();
+                
+                int distance1 = -1;
+                
+                while(rsqueryIdCityOrder.next()){                    
+                    int temp = rsqueryIdCityOrder.getInt(1);                    
+                    Node tempNode = Node.allNodes.get(temp);                    
+                    if(tempNode.getDistance() > distance1){                        
+                        distance1 = tempNode.getDistance();                        
+                    }
+                }
+                
+                Calendar cal = new sa190222_GeneralOperations().getCurrentTime();                                                
+                java.util.Date utilDate = cal.getTime();
+                java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                
+                int startDate = distance + distance1; 
+                
+                for(Node node: neareastCityNode.getShortestPath()){
+                    
+                    String insertTrackingQuery = "Insert into Tracking(IdOrder, StartDate, IdCity) values (?, Dateadd(DAY, ?, ?), ?)";
+                    
+                    PreparedStatement psTracking = conn.prepareStatement(insertTrackingQuery);
+                    psTracking.setInt(1, idOrder);
+                    psTracking.setInt(2,startDate);
+                    psTracking.setDate(3, sqlDate);
+                    psTracking.setInt(4,node.getName());
+                    psTracking.executeUpdate();
+                    
+                    startDate -= node.getDistance();
+                }
+                
+                String updateOrderQuery = "UPDATE [Order] set status = 'sent', TravelTime = ?, SentTime = ?, CurrentCity = ? where IdOrder = ?";
+                try(PreparedStatement ps2 = conn.prepareStatement(updateOrderQuery);){                                                            
+                    ps2.setInt(1, distance + distance1);
+                    ps2.setDate(2, sqlDate);
+                    ps2.setInt(3, cityIdNearestToBuyer);
+                    ps2.setInt(4, idOrder);                    
                     ps2.executeUpdate();                    
                 }                
                 
