@@ -57,7 +57,8 @@ CREATE TABLE [Order]
 	[Status]             varchar(100)  NOT NULL ,
 	[CurrentCity]        integer  NULL ,
 	[SentTime]           datetime  NULL ,
-	[ReceivedTime]       datetime  NULL 
+	[ReceivedTime]       datetime  NULL ,
+	[TravelTime]         integer  NULL 
 )
 go
 

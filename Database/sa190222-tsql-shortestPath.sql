@@ -1,11 +1,15 @@
 USE ProdavnicaArtikala
 GO
 
-CREATE PROCEDURE SP_SHORTEST_PATH
+CREATE FUNCTION F_SHORTEST_PATH
+(	
 	@start int,
 	@end int
+)
+RETURNS TABLE 
 AS
-BEGIN
+RETURN 
+(
 	WITH Tabela1 as(
 		SELECT 
 			CASE
@@ -32,6 +36,5 @@ BEGIN
 	Select TOP 1 *
 	from Tabela2
 	Order by Distance ASC
-
-END
+)
 GO

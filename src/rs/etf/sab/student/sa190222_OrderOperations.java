@@ -123,43 +123,41 @@ public class sa190222_OrderOperations implements OrderOperations {
     }
 
     @Override
-    public int completeOrder(int orderId) {
+    public int completeOrder(int idOrder) {
         
         Connection conn = DB.getInstance().getConnection();        
-//        BigDecimal price = getFinalPrice(orderId);
-//        
-//        String query = "Select B.*\n" +
-//        "from Buyer B join [Order] O on B.IdBuyer = O.IdBuyer\n" +
-//        "where Wallet > ?";                        
-//        
-//        try(PreparedStatement ps = conn.prepareStatement(query);) {
-//            
-//            try(ResultSet rs = ps.executeQuery();){               
-//                if(!rs.next()){
-//                    return  -1;
-//                }                                
-//                
-//                int idBuyer = rs.getInt(1);                
-//                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
-//                
-//                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
-//                    ps1.setBigDecimal(1, price);
-//                    ps1.setInt(2, idBuyer);                    
-//                    ps1.executeUpdate();                    
-//                }
-//                
-//                String updateOrderQuery = "UPDATE [Order] set status = 'sent' where IdOrder = ?";
-//                try(PreparedStatement ps2 = conn.prepareStatement(updateOrderQuery);){                                        
-//                    ps2.setInt(1, idBuyer);                    
-//                    ps2.executeUpdate();                    
-//                }                
-//                return 1;
-//            }
-//            
-//        } catch (SQLException ex) {
-//            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        
+        BigDecimal price = getFinalPrice(idOrder);
+
+        String query = "Select * from Buyer where Wallet > ?"; 
+
+        try(PreparedStatement ps = conn.prepareStatement(query);) {
+            ps.setBigDecimal(1, price);
+            try(ResultSet rs = ps.executeQuery();){               
+                if(!rs.next()){
+                    return  -1;
+                }                                
+                
+                int idBuyer = rs.getInt(1);                
+                String updateBuyerQuery = "UPDATE Buyer SET Wallet = Wallet - ? where IdBuyer = ?";
+                
+                try(PreparedStatement ps1 = conn.prepareStatement(updateBuyerQuery);){                    
+                    ps1.setBigDecimal(1, price);
+                    ps1.setInt(2, idBuyer);                    
+                    ps1.executeUpdate();                    
+                }
+                
+                String updateOrderQuery = "UPDATE [Order] set status = 'sent' where IdOrder = ?";
+                try(PreparedStatement ps2 = conn.prepareStatement(updateOrderQuery);){                                        
+                    ps2.setInt(1, idOrder);                    
+                    ps2.executeUpdate();                    
+                }                
+                
+                return 1;
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return -1;
     }
 
@@ -340,8 +338,9 @@ public class sa190222_OrderOperations implements OrderOperations {
 //        Calendar cal = new sa190222_OrderOperations().getSentTime(1);
 //        System.out.println(cal);
         
-        BigDecimal retBig = new sa190222_OrderOperations().getFinalPrice(1);
-        System.out.println("rs.etf.sab.student.sa190222_OrderOperations.main() " + retBig);
+        int completeOrder = new sa190222_OrderOperations().completeOrder(1);
+        System.out.println(completeOrder);
+        
         
     }
     
