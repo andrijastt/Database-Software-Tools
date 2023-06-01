@@ -56,41 +56,6 @@ public class Dijkstra {
             shortestPath.add(sourceNode);
             evaluationNode.setShortestPath(shortestPath);
         }
-    }
-    
-    public static void main(String[] args) {
-        
-        Node nodeA = new Node(1);
-        Node nodeB = new Node(2);
-        Node nodeC1 = new Node(3);
-        Node nodeC2 = new Node(4); 
-        Node nodeC3 = new Node(5);
-        Node nodeC4 = new Node(6);
-        Node nodeC5 = new Node(7);
-
-        Node.connectNodes(nodeA, nodeC1, 10);
-        Node.connectNodes(nodeA, nodeC5, 15);
-        Node.connectNodes(nodeA, nodeC2, 3);
-        Node.connectNodes(nodeA, nodeC4, 3);
-        Node.connectNodes(nodeB, nodeC1, 8);
-        Node.connectNodes(nodeB, nodeC5, 2);
-        Node.connectNodes(nodeC3, nodeC2, 1);
-        Node.connectNodes(nodeC3, nodeC4, 1);
-        
-
-        Graph graph = new Graph();
-
-        graph.addNode(nodeA);
-        graph.addNode(nodeB);
-        graph.addNode(nodeC1);
-        graph.addNode(nodeC2);
-        graph.addNode(nodeC3);
-        graph.addNode(nodeC4);
-        graph.addNode(nodeC5);
-
-        graph = Dijkstra.calculateShortestPathFromSource(graph, nodeA);
-
-        System.out.println("rs.etf.sab.student.Dijkstra.main()");
-    }
+    }        
     
 }

@@ -28,17 +28,18 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             
             ps.setInt(1, idBuyer);
             try(ResultSet rs = ps.executeQuery();){                
-                if(rs.next()){                    
-                    return rs.getBigDecimal(1);                    
+                if(rs.next()){
+                    if(rs.getBigDecimal(1) != null)
+                    return rs.getBigDecimal(1).setScale(3);                    
                 }
-                return new BigDecimal(0);
+                return new BigDecimal(0).setScale(3);
             }
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }        
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
@@ -52,16 +53,16 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             try(ResultSet rs = ps.executeQuery();){                
                 if(rs.next()){
                     if(rs.getBigDecimal(1) != null)
-                    return rs.getBigDecimal(1);                    
+                    return rs.getBigDecimal(1).setScale(3);                    
                 }
-                return new BigDecimal(0);
+                return new BigDecimal(0).setScale(3);
             }
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }        
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
@@ -192,7 +193,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
@@ -214,7 +215,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
                 
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
@@ -234,14 +235,14 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
     public BigDecimal getSystemProfit() {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select Coalesce(SUM(AmountPaid * SystemCut / 100), 0) from [Transaction] T join [Order] O on T.IdOrder = O.IdOrder where Status = 'arrived' and T.IdShop is null";
+        String query = "Select Coalesce(SUM(AmountPaid * SystemCut / 100), 0) from [Transaction] T join [Order] O on T.IdOrder = O.IdOrder where IdShop is null and O.status='arrived'";
         
         try(PreparedStatement ps = conn.prepareStatement(query);
                 ResultSet rs = ps.executeQuery();) {            
@@ -251,7 +252,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return new BigDecimal(0);
+        return new BigDecimal(0).setScale(3);
     }
            
     

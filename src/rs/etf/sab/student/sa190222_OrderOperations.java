@@ -45,7 +45,7 @@ public class sa190222_OrderOperations implements OrderOperations {
             Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
                         
-        String query = "Select * from Article where Count > ? + ? and IdArticle = ?";
+        String query = "Select * from Article where Count >= ? + ? and IdArticle = ?";
         try(PreparedStatement ps = conn.prepareStatement(query)) {            
             ps.setInt(1, count);
             ps.setInt(2, articleCount);
@@ -268,14 +268,14 @@ public class sa190222_OrderOperations implements OrderOperations {
             
             ps.setInt(1, idOrder);
             try(ResultSet rs =ps.executeQuery();){
-                if(rs.next()) return rs.getBigDecimal(1);                
+                if(rs.next()) return rs.getBigDecimal(1).setScale(3);                
             }
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
@@ -291,14 +291,16 @@ public class sa190222_OrderOperations implements OrderOperations {
             
             ps.setInt(1, idOrder);                        
             try(ResultSet rs = ps.executeQuery();){
-                if(rs.next()) return rs.getBigDecimal(1);            
+                if(rs.next()) 
+                    if(rs.getBigDecimal(1) != null) return rs.getBigDecimal(1).setScale(3);            
+                    return new BigDecimal(0).setScale(3);
             }
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_OrderOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return new BigDecimal(-1);
+        return new BigDecimal(-1).setScale(3);
     }
 
     @Override
