@@ -45,12 +45,13 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getShopTransactionsAmmount(int idShop) {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select Sum(AmountPaid) from [TransactionShop] where IdShop = ?";
+        String query = "Select Sum(AmountPaid) from [Transaction] where IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idShop);
             try(ResultSet rs = ps.executeQuery();){                
-                if(rs.next()){                    
+                if(rs.next()){
+                    if(rs.getBigDecimal(1) != null)
                     return rs.getBigDecimal(1);                    
                 }
                 return new BigDecimal(0);
@@ -110,7 +111,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     @Override
     public int getTransactionForShopAndOrder(int idOrder, int idShop) {
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select IdTransaction from [TransactionShop] where IdOrder = ? and IdShop = ?";
+        String query = "Select IdTransaction from [Transaction] where IdOrder = ? and IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idOrder);
@@ -132,7 +133,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         ArrayList<Integer> ret = new ArrayList<>();
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select IdTransaction from [TransactionShop] where IdShop = ?";
+        String query = "Select IdTransaction from [Transaction] where IdShop = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);) {
             
             ps.setInt(1, idShop);
@@ -140,6 +141,8 @@ public class sa190222_TransactionOperations implements TransactionOperations {
                 while(rs.next()){                    
                     ret.add(rs.getInt(1));
                 }
+                
+                if(ret.size() == 0) return null;
                 return ret;
             }
             
@@ -182,7 +185,8 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         try(PreparedStatement ps = conn.prepareStatement(query);){                        
             ps.setInt(1, idOrder);
             try(ResultSet rs = ps.executeQuery();){                
-                if(rs.next()) return rs.getBigDecimal(1);                
+                if(rs.next()) 
+                    if(rs.getBigDecimal(1) != null )return rs.getBigDecimal(1).setScale(3);                
             }            
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
@@ -195,14 +199,16 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getAmmountThatShopRecievedForOrder(int idShop, int idOrder) {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select Sum(AmountPaid * (100 - SystemCut) / 100) from [TransactionShop] where IdShop = ? and IdOrder = ?";
+        String query = "Select Sum(AmountPaid * 95) / 100) from [Transaction] where IdShop = ? and IdOrder = ?";
         try(PreparedStatement ps = conn.prepareStatement(query);){
             
             ps.setInt(1, idShop);
             ps.setInt(2, idOrder);
             try(ResultSet rs = ps.executeQuery();){                
-                if(rs.next()) return rs.getBigDecimal(1);                
+                if(rs.next())
+                    if(rs.getBigDecimal(1) != null )return rs.getBigDecimal(1).setScale(3);                
             }
+            
             
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
@@ -221,7 +227,7 @@ public class sa190222_TransactionOperations implements TransactionOperations {
             
             ps.setInt(1, idTransaction);
             try(ResultSet rs = ps.executeQuery();){                
-                if(rs.next()) return rs.getBigDecimal(1);                
+                if(rs.next()) return rs.getBigDecimal(1).setScale(3);                
             }
             
         } catch (SQLException ex) {
@@ -235,11 +241,12 @@ public class sa190222_TransactionOperations implements TransactionOperations {
     public BigDecimal getSystemProfit() {
         
         Connection conn = DB.getInstance().getConnection();        
-        String query = "Select SUM(AmountPaid * SystemCut / 100) from [Transaction]";
+        String query = "Select Coalesce(SUM(AmountPaid * SystemCut / 100), 0) from [Transaction] T join [Order] O on T.IdOrder = O.IdOrder where Status = 'arrived' and T.IdShop is null";
         
         try(PreparedStatement ps = conn.prepareStatement(query);
                 ResultSet rs = ps.executeQuery();) {            
-            if(rs.next()) return rs.getBigDecimal(1);            
+            if(rs.next()) return rs.getBigDecimal(1).setScale(3);
+                            
         } catch (SQLException ex) {
             Logger.getLogger(sa190222_TransactionOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -247,4 +254,11 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         return new BigDecimal(0);
     }
            
+    
+    public static void main(String[] args) {
+        
+        BigDecimal big1 = new sa190222_TransactionOperations().getSystemProfit();
+        System.out.println("rs.etf.sab.student.sa190222_TransactionOperations.main()" + big1);
+        
+    }
 }
