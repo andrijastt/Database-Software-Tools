@@ -422,57 +422,5 @@ public class sa190222_OrderOperations implements OrderOperations {
         
         return -1;
     }
-    
-    public static void main(String[] args) {
         
-//        int ret = new sa190222_OrderOperations().addArticle(1, 1, 10);
-//        ret = new sa190222_OrderOperations().addArticle(1, 2, 20);
-//        System.out.println(ret);
-//        
-//        int retInt = new sa190222_OrderOperations().getLocation(1);  
-////        retInt = new sa190222_OrderOperations().removeArticle(1, 2); 
-//
-//        List<Integer> listRet = new sa190222_OrderOperations().getItems(1);
-//        System.out.println(retInt);
-//        
-//        Calendar cal = new sa190222_OrderOperations().getSentTime(1);
-//        System.out.println(cal);                        
-//        int buyerTransactionId = new sa190222_TransactionOperations().getTransationsForBuyer(1).get(0);
-//        Calendar cal = new sa190222_TransactionOperations().getTimeOfExecution(buyerTransactionId);
-//        List<Integer> ret = new sa190222_TransactionOperations().getTransationsForShop(3);
-//        System.out.println("rs.etf.sab.student.sa190222_OrderOperations.main()" + cal.getTime());
-        
-        
-//        BigDecimal ret1 = new sa190222_OrderOperations().getDiscountSum(1);
-//        BigDecimal ret2 = new sa190222_OrderOperations().getFinalPrice(1);
-//        System.out.println(ret1);
-        System.out.println(new sa190222_OrderOperations().getSentTime(1).getTime());
-        System.out.println(new sa190222_OrderOperations().getState(1));
-//        int completeOrder = new sa190222_OrderOperations().completeOrder(1);
-//        System.out.println(completeOrder);
-//        System.out.println(new sa190222_OrderOperations().getState(1));
-        
-        int buyerTransactionId = new sa190222_TransactionOperations().getTransationsForBuyer(1).get(0);
-        System.out.println(buyerTransactionId);
-        System.out.println(new sa190222_TransactionOperations().getTimeOfExecution(buyerTransactionId).getTime());
-        System.out.println(new sa190222_TransactionOperations().getTransationsForShop(1));
-        
-        System.out.println(new sa190222_OrderOperations().getFinalPrice(1));
-        BigDecimal finalPrice = new sa190222_OrderOperations().getFinalPrice(1);
-        BigDecimal discountSum = new sa190222_OrderOperations().getDiscountSum(1);
-        System.out.println(finalPrice);
-        System.out.println(discountSum);
-        System.out.println(finalPrice.subtract(discountSum));
-        
-        System.out.println(new sa190222_TransactionOperations().getBuyerTransactionsAmmount(1));
-        System.out.println(new sa190222_TransactionOperations().getShopTransactionsAmmount(1));
-        System.out.println(new sa190222_TransactionOperations().getShopTransactionsAmmount(2));
-        System.out.println(new sa190222_TransactionOperations().getSystemProfit());
-        
-        System.out.println(new sa190222_OrderOperations().getLocation(1));
-        System.out.println(new sa190222_OrderOperations().getRecievedTime(1).getTime());
-        System.out.println(new sa190222_OrderOperations().getSentTime(1).getTime());
-        System.out.println(new sa190222_TransactionOperations().getTransactionForShopAndOrder(1, 1));
-    }
-    
 }

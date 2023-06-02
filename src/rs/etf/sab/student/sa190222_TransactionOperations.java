@@ -253,13 +253,5 @@ public class sa190222_TransactionOperations implements TransactionOperations {
         }
         
         return new BigDecimal(0).setScale(3);
-    }
-           
-    
-    public static void main(String[] args) {
-        
-        BigDecimal big1 = new sa190222_TransactionOperations().getSystemProfit();
-        System.out.println("rs.etf.sab.student.sa190222_TransactionOperations.main()" + big1);
-        
-    }
+    }                
 }

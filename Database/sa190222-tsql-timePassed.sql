@@ -68,14 +68,15 @@ BEGIN
 			while @@FETCH_STATUS = 0
 			begin
 
-				Select @balance = Sum(I.[Count] * A.Price * (100 - S.Discount) / 100)
+				Select @balance = Sum(I.[Count] * A.Price * (100 - S.Discount) / 100) * 0.95
 				from [Order] O join Item I on O.IdOrder = I.IdOrder join Article A on A.IdArticle = I.IdArticle join Shop S on S.IdShop = A.IdShop
 				where O.IdOrder = @idOrder and S.IdShop = @idShop
 
-				Insert into [Transaction](IdShop, IdOrder, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for order, buyer
-				values(@idShop, @idOrder, @balance, DATEADD(day, @travelTime, @sentTime), 5)
-
-				set @balance = @balance * 0.95
+				if(not exists(Select * from [Transaction] where IdShop = @idShop and IdOrder = @idOrder))
+				begin
+					Insert into [Transaction](IdShop, IdOrder, AmountPaid, ExecutionTime, SystemCut)	-- insert Transaction for order, buyer
+					values(@idShop, @idOrder, @balance, DATEADD(day, @travelTime, @sentTime), 5)				
+				end				
 
 				Update Shop																			-- update shop balance
 				set Balance = Balance + @balance
